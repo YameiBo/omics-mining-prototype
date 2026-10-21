@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# 构建产物（由 build.js 生成，勿入库）
+prototype/index.html
+prototype/index-cdn.html
+prototype/.build/
+
+# 还原点（版本控制已由 git 接管）
+_backup-v1/
+prototype/_backup-v1/
+
+# 截图与缓存
+prototype/.shots/
+__pycache__/
+*.pyc
+
+# 依赖（node_modules 是指向共享工作区的软链；不带尾斜杠以同时匹配软链）
+node_modules
+
+# 历史交付包（旧名，刻意保留在本地）
+AI组学数据智能挖掘系统/
+AI组学数据智能挖掘系统-原型.zip
+
+# 部署目录（与 prototype/index.html 同步的副本）
+deploy-static/
+
+# 参考系统抓取产物
+prototype/.refsys/
+
+# 日志与 PRD 过程产物
+logs/
+output/

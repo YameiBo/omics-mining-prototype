@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="组学数据智能挖掘系统">
+<title>组学数据智能挖掘系统</title>
+<!--INJECT_CSS-->
+</head>
+<body data-role="super">
+
+<a href="#content" class="sr">跳到主要内容</a>
+
+<div class="app" data-proto-app data-proto-platform="web">
+
+  <!-- ═══════════ 顶栏：品牌 + 面包屑 + 全局控制 ═══════════ -->
+  <header class="topnav">
+    <button class="iconbtn mobnav" data-mobnav aria-label="展开导航"><i class="fa-solid fa-bars ico"></i></button>
+
+    <div class="tnav-brand">
+      <span class="tnav-logo"><i class="fa-solid fa-dna ico"></i></span>
+      <div class="min-w-0">
+        <div class="tnav-name">组学数据智能挖掘系统</div>
+        <div class="tnav-sub">OMICS INTELLIGENCE PLATFORM</div>
+      </div>
+    </div>
+
+    <!-- 一级导航让位给左栏分组导航；顶栏只留面包屑，回答「我在哪条流程的哪一步」。
+         「工作台」是顶级叶子项、不属于任何分组，它的组名段留空、分隔箭头靠 CSS 一起收起，
+         由 goto() 按当前页所属分组决定组名是否有内容。 -->
+    <!-- 面包屑由 renderCrumb() 按当前页生成：每一段都是可点的返回入口
+         （工作台 / 所属分组），最后一段是当前页、不可点。
+         段数随页面变化 —— 「工作台」是根，没有祖先段。 -->
+    <nav class="crumb" id="crumbBar" aria-label="当前位置"></nav>
+
+    <div class="topnav__side">
+      <!-- 左栏显示 / 隐藏：宽表页面自动收起，这里可以手动叫回来 -->
+      <button class="iconbtn" data-rail-toggle aria-label="展开或收起左侧导航" aria-expanded="true">
+        <i class="fa-solid fa-table-columns ico"></i>
+      </button>
+      <!-- 运行历史：从常驻右栏改为按需抽屉，把宽度还给主流程 -->
+      <button class="iconbtn" data-hist-toggle aria-label="打开运行历史" aria-expanded="false">
+        <i class="fa-solid fa-clock-rotate-left ico"></i>
+      </button>
+      <!-- G-01 当前用户与角色（v54）
+           原「临床医生 / PI ⇄ 生信工程师」那对切换器**整块撤除**：它切的是
+           「界面露哪些控件」的视图，与真正决定权限的身份是两回事，并存时
+           切了它却改不了任何权限，人分不清哪个才是身份。
+           v54 合并成一处入口：显示当前登录身份，点开换角色，权限随之改变。
+           名单与权限判定都在 app.js 的 ROLES 那一段（唯一事实来源）。 -->
+      <div class="relative">
+        <button class="usersw" id="userSw" data-pop="popUser"
+                aria-haspopup="true" aria-expanded="false"
+                aria-label="当前用户与角色，点击切换">
+          <span class="usersw__av" id="userSwAv"></span>
+          <span class="usersw__col">
+            <span class="usersw__n" id="userSwName">超级管理员</span>
+            <span class="usersw__w" id="userSwWho">超级管理员 / 信息科 / 样本库负责人</span>
+          </span>
+          <i class="fa-solid fa-chevron-down ico usersw__c"></i>
+        </button>
+        <div class="pop pop--user" data-proto-scope="drawer:user" data-proto-layer="20" id="popUser" hidden>
+          <div class="pop__hd"><i class="fa-solid fa-user-gear ico"></i>当前用户与角色
+            <span class="tag tag--hint ml-auto">点击切换</span>
+          </div>
+          <div id="popUserList"></div>
+          <div class="pop__ft">切换只改「能做什么」，不改动任何数据</div>
+        </div>
+      </div>
+
+      <!-- G-02 任务中心 -->
+      <div class="relative">
+        <button class="iconbtn" data-pop="popTask" aria-label="任务中心，2 项进行中">
+          <i class="fa-solid fa-bell ico"></i>
+          <span class="iconbtn__dot" id="taskBadge">3</span>
+        </button>
+        <div class="pop" data-proto-scope="drawer:task" data-proto-layer="20" id="popTask" hidden>
+          <div class="pop__hd"><i class="fa-solid fa-hourglass-half ico"></i>任务队列
+            <span class="tag tag--brand ml-auto">1 运行中 · 2 排队</span>
+          </div>
+          <div class="pop__bd">
+            <div class="qrow">
+              <span class="qpos">1</span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate">T-2409-020 代谢组分析</div>
+                <div class="text-[11.5px] text-ink3">等待中 · 队列第 1 位</div>
+              </div>
+            </div>
+            <div class="qrow">
+              <span class="qpos">2</span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate">T-2409-019 蛋白组定量</div>
+                <div class="text-[11.5px] text-ink3">等待中 · 队列第 2 位</div>
+              </div>
+            </div>
+            <div class="qrow">
+              <span class="qpos qpos--me">3</span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate">T-2409-017 基因变异分析</div>
+                <div class="text-[11.5px] text-ink3">运行中 · 已完成 68%</div>
+                <div class="bar bar--thin mt-2"><div class="bar__f" style="width:68%"></div></div>
+              </div>
+            </div>
+            <div class="hr"></div>
+            <div class="row justify-between text-[12px] text-ink3">
+              <span>CPU <span class="num">12/32</span> 核</span>
+              <span>内存 <span class="num">48/128</span> GB</span>
+              <span>GPU <span class="num">1/2</span></span>
+            </div>
+            <button class="btn btn--sm btn--block mt-3" data-go="p06"><i class="fa-solid fa-arrow-right ico"></i>前往任务运行页</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- v47 需求 1：这里原有的一颗「阈值待确认」徽标已撤。
+           它标的是「三项判定阈值还需与院方确认」——那句话属于**参数配置页**
+           的说法（那边「阈值依据」卡上写着同一件事），挂在全局顶栏上等于
+           把一个局部的待办说成全站的常态，还会一直跟着用户走到任何页面。
+           阈值本身没撤：仍收在 p05 的「阈值依据」卡与 #THR 常量里。
+           .tag--hint 这个类保留 —— 医学知识库 / 自有知识库两处还在用。 -->
+    </div>
+  </header>
+
+  <div class="shell">
+
+  <!-- ═══════════ 左栏：可折叠分组导航（工作台 / 数据资产 / 智能分析 / 项目空间 / 知识赋能 / 系统管理） ═══════════
+       工具库与流程画布不是常驻左栏，而是「智能分析 › 流程模板」这一步内部的能力。 -->
+  <aside class="snav" id="snav" aria-label="主导航">
+    <div class="snav__scroll" id="navBody"></div>
+    <div class="snav__foot">v2.2</div>
+  </aside>
+
+  <div class="main">
+
+    <main class="content" id="content">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         P-01 工作台
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page is-on" data-proto-scope="page:p01" data-proto-layer="0" id="page-p01" aria-label="工作台">
+      <div class="stack">
+
+        <div class="hero">
+          <div class="hero__bd">
+            <div class="hero__eye">TJ-TCM-2026 队列 · 75 例样本已就绪</div>
+            <h1 class="hero__h1">从组学数据到可解释的结论</h1>
+            <p class="hero__p">上传数据、选好流程，系统自动完成样本对齐、分析与结果解读。全程不需要写代码，每一步都能回溯。</p>
+            <div class="hero__act">
+              <button class="btn btn--lg btn--primary" data-go="p02"><i class="fa-solid fa-upload ico"></i>开始新分析</button>
+              <button class="btn btn--lg btn--ghost" data-scroll="示例数据集"><i class="fa-solid fa-layer-group ico"></i>查看示例数据集</button>
+            </div>
+            <div class="hero__flow cli-only">
+              <span class="hero__step">上传数据</span><i class="fa-solid fa-chevron-right ico"></i>
+              <span class="hero__step">流程模板</span><i class="fa-solid fa-chevron-right ico"></i>
+              <span class="hero__step">查看结果</span>
+            </div>
+          </div>
+          <div class="hero__art">
+            <img src="assets/hero-genomics.jpg" alt="组学测序数据可视化">
+            <div class="hero__cap"><b>75 例 · 2 组</b><br>转录组 bulk RNA-seq · GRCh38 对齐</div>
+          </div>
+        </div>
+
+        <div class="mrow">
+          <div class="mcell">
+            <div class="mcell__l">进行中任务</div>
+            <div class="mcell__v">2<span class="mcell__u">项</span></div>
+            <div class="mcell__f">其中 1 项排队中</div>
+          </div>
+          <div class="mcell">
+            <div class="mcell__l">近 30 天完成</div>
+            <div class="mcell__v">24<span class="mcell__u">次</span></div>
+            <div class="mcell__f">成功 23 · 取消 1</div>
+          </div>
+          <div class="mcell">
+            <div class="mcell__l">累计分析样本</div>
+            <div class="mcell__v">1,860<span class="mcell__u">例</span></div>
+            <div class="mcell__f">覆盖 4 个组学类型</div>
+          </div>
+          <div class="mcell">
+            <div class="mcell__l">
+              <span class="term">任务耗时
+                <i class="fa-solid fa-circle-question term__i"></i>
+                <span class="term__p">统计口径为中位数，不用平均值——长尾任务会把均值拉高，无法反映典型等待时间。</span>
+              </span>
+            </div>
+            <div class="mcell__v">3:42<span class="mcell__u">分:秒</span></div>
+            <div class="mcell__f">中位数 · n=24</div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="stack">
+
+            <div class="card">
+              <div class="card__hd">
+                <span class="card__t">最近任务</span>
+                <span class="card__d">最近 7 天</span>
+                <button class="btn btn--sm btn--quiet ml-auto" data-toast="已按提交时间倒序，仅显示最近 7 天">全部</button>
+              </div>
+              <div class="card__bd pt-0">
+                <div class="tblwrap mt-3">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>任务编号</th><th>分析类型</th><th>数据集</th><th>状态</th>
+                        <th class="num">提交时间</th><th class="num">耗时</th><th class="wid"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="num">T-2409-018</td>
+                        <td>差异表达分析</td>
+                        <td class="text-ink3">TJ-TCM · 转录组</td>
+                        <td><span class="tag tag--ok"><i class="fa-solid fa-circle-check ico"></i>已完成</span></td>
+                        <td class="num">09-14 14:02</td>
+                        <td class="num">3:12</td>
+                        <td class="wid"><button class="btn btn--sm btn--quiet" data-pano="de">查看结果</button></td>
+                      </tr>
+                      <tr>
+                        <td class="num">T-2409-017</td>
+                        <td>基因变异分析</td>
+                        <td class="text-ink3">TJ-TCM · WGS</td>
+                        <td><span class="tag tag--brand"><i class="fa-solid fa-spinner ico spin"></i>运行中 68%</span></td>
+                        <td class="num">09-14 15:48</td>
+                        <td class="num">—</td>
+                        <td class="wid"><button class="btn btn--sm btn--quiet" data-go="p06">查看进度</button></td>
+                      </tr>
+                      <tr>
+                        <td class="num">T-2409-016</td>
+                        <td>功能富集分析</td>
+                        <td class="text-ink3">TJ-TCM · 转录组</td>
+                        <td><span class="tag tag--ok"><i class="fa-solid fa-circle-check ico"></i>已完成</span></td>
+                        <td class="num">09-14 11:20</td>
+                        <td class="num">1:38</td>
+                        <td class="wid"><button class="btn btn--sm btn--quiet" data-pano="enrich">查看结果</button></td>
+                      </tr>
+                      <tr>
+                        <td class="num">T-2409-015</td>
+                        <td>蛋白组定量分析</td>
+                        <td class="text-ink3">TJ-TCM · 蛋白组</td>
+                        <td><span class="tag"><i class="fa-solid fa-ban ico"></i>已取消</span></td>
+                        <td class="num">09-13 16:05</td>
+                        <td class="num">—</td>
+                        <td class="wid"><button class="btn btn--sm btn--quiet" data-toast="已基于同一参数快照重新提交，任务编号 T-2409-021">重新运行</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card eng-only" data-anchor="快捷入口">
+              <div class="card__hd"><span class="card__t">快捷入口</span></div>
+              <div class="card__bd">
+                <div class="grid4">
+                  <button class="btn btn--block" data-go="p02"><i class="fa-solid fa-cloud-arrow-up ico"></i>数据汇集</button>
+                  <button class="btn btn--block" data-toast="流程模板库为 P1 范围，首版原型未实现"><i class="fa-solid fa-sitemap ico"></i>流程模板</button>
+                  <button class="btn btn--block" data-go="p06"><i class="fa-solid fa-file-lines ico"></i>运行日志</button>
+                  <button class="btn btn--block" data-drawer="trace"><i class="fa-solid fa-code-branch ico"></i>可追溯查询</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="stack">
+            <!-- P-01 问答交互（v30；v53 起是会话唯一宿主）：渲染 AGENT_LOG，
+                 快捷问题与输入框都在卡上，问答逻辑全部收在 app.js 的 agent* 函数里。 -->
+            <div class="card" id="wbAgentCard" data-anchor="问答交互">
+              <div class="card__hd">
+                <span class="card__t">问答交互</span>
+                <span class="tag tag--ok"><i class="fa-solid fa-robot ico"></i>组学智能体 · 在线</span>
+                <button class="iconbtn iconbtn--card ml-auto" data-wb-full aria-pressed="false" aria-label="全屏展开问答交互"><i class="fa-solid fa-expand ico"></i></button>
+              </div>
+              <div class="card__bd pt-0">
+                <div class="wbagent__bd" id="wbAgentBody" aria-live="polite"></div>
+                <div class="agentwin__qs" id="wbAgentQs">
+                  <button class="qchip" data-ask="查看项目">查看项目</button>
+                  <button class="qchip" data-ask="查看流程">查看流程</button>
+                  <button class="qchip" data-ask="查看最近任务">查看最近任务</button>
+                  <button class="qchip" data-ask="查看项目统计">查看项目统计</button>
+                  <button class="qchip" data-ask="有哪些工具">有哪些工具</button>
+                  <button class="qchip" data-ask="跑 RNA-seq 流程">跑 RNA-seq 流程</button>
+                </div>
+                <div class="agentwin__in">
+                  <label class="sr" for="wbAgentIn">向智能体提问</label>
+                  <input class="inp" id="wbAgentIn" placeholder="对话操控整个系统，例如「查看最近任务」…" autocomplete="off">
+                  <button class="btn btn--sm btn--primary" data-agent-send="wbAgentIn" aria-label="发送">发送<i class="fa-solid fa-paper-plane ico"></i></button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card" data-anchor="示例数据集">
+          <div class="card__hd">
+            <span class="card__t">内置示例数据集</span>
+            <div class="seg ml-auto" id="dsSeg" role="tablist" aria-label="数据集分组">
+              <button class="seg__b is-on" data-dsgrp="own" role="tab" aria-selected="true">院内队列</button>
+              <button class="seg__b" data-dsgrp="human" role="tab" aria-selected="false">人类公开</button>
+              <button class="seg__b" data-dsgrp="mouse" role="tab" aria-selected="false">小鼠公开</button>
+            </div>
+          </div>
+          <div class="card__bd">
+            <!-- v40：三张院内队列卡从 HTML 里搬走了，改成与公开数据集同一份数据
+                 （app.js 的 SAMPLE_DS）—— 它们要在系统管理里被改简介 / 封面 / 显示开关，
+                 硬编码在这儿的话，改完连这个 grid 都不知道自己在等谁。 -->
+            <div class="grid3" id="dsGroup-own"></div>
+            <div class="grid3" id="dsGroup-human" hidden></div>
+            <div class="grid3" id="dsGroup-mouse" hidden></div>
+            <p class="text-[12px] text-ink3 mt-3">公开数据集的样本量与编号取自各项目公开口径。点选后会自动进入数据汇集页，并按物种匹配参考基因组。
+              共 <span id="demoDsSum" class="num">—</span>，可见性、简介与封面在系统管理 › 示例数据集里逐条设置。</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         数据资产 · 样本档案
+         v46：页内那个「基因档案」tab 整块撤了（面板 + tab 条 + 页头两颗按钮
+         + 它的「重建档案」抽屉），所以现在页面上只剩样本档案一份内容，
+         直接把面板铺开、不再有页签条 —— 只剩一个 tab 的页签条只是噪音。
+         页面 id 仍叫 page-gene（左栏 data-go、页面清单、截图脚本都按它走），
+         别跟着改名：改 id 的代价远大于名字本身带来的困惑。
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:gene" data-proto-layer="0" id="page-gene" aria-label="样本档案">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">数据资产 · 样本档案</div>
+          <h1 class="phead__h1">样本档案</h1>
+        </div>
+        <div class="phead__side">
+          <button class="btn btn--primary" data-samp-new><i class="fa-solid fa-user-plus ico"></i>登记新样本</button>
+          <button class="btn" data-dl="samples"><i class="fa-solid fa-download ico"></i>导出样本档案</button>
+        </div>
+      </div>
+
+      <!-- 面板容器。v46 去掉页签后这里不再有 tabpanel 语义，保留一层 div
+           只为承载 id 与将来的分组 —— 脚本与验证都按 #sampPanel 定位。 -->
+      <div id="sampPanel">
+
+        <!-- ① 样本列表。一行一样本、一列一维度：列表负责「挑哪一例」，
+               下方指标 / 信息 / 血缘 / 跨组学 / 资料负责「看这一例」。
+               点行即切换下方详情，不新开页面 —— 档案的用法是边翻边看。 -->
+        <div class="card mb-4" id="sampListCard">
+          <div class="card__hd">
+            <span class="card__t">样本列表</span>
+            <span class="card__d" id="sampListMeta">—</span>
+            <button type="button" class="btn btn--sm ml-auto" data-dl="samplist"><i class="fa-solid fa-download ico"></i>导出当前列表</button>
+          </div>
+          <div class="card__bd">
+            <!-- 关键词与四个维度下拉在**同一条筛选栏**里：以前关键词单独占一行、
+                   下拉另起一行，中间还夹着候选 chips 与空态提示，看着是两处东西。
+                   现在按「宽度够就排一行、不够就换行」自然折行（.filtbar 本就 flex-wrap），
+                   窄屏下关键词行单独占一行、下拉行接在下面，仍是一块。 -->
+            <div class="filtbar" id="sampFiltBar">
+              <div class="filtbar__q">
+                <label class="fld fld--grow">
+                  <span class="fld__l">样本 ID</span>
+                  <input class="inp" id="sampQ" type="search" autocomplete="off"
+                         placeholder="例如 S037 / SUBJ-0371 / 肝细胞癌">
+                </label>
+                <button class="btn btn--primary" type="button" data-samp-go><i class="fa-solid fa-magnifying-glass ico"></i>查询</button>
+              </div>
+              <label class="fld"><span class="fld__l">疾病</span>
+                <select class="sel" id="fltDx" data-samp-flt="dx" style="width:auto"><option value="">全部</option></select>
+              </label>
+              <label class="fld"><span class="fld__l">质控结论</span>
+                <select class="sel" id="fltQc" data-samp-flt="qc" style="width:auto">
+                  <option value="">全部</option>
+                  <option value="ok">合格</option>
+                  <option value="warn">部分合格</option>
+                  <option value="danger">不合格</option>
+                </select>
+              </label>
+              <label class="fld"><span class="fld__l">组学覆盖</span>
+                <select class="sel" id="fltOm" data-samp-flt="om" style="width:auto">
+                  <option value="">全部</option>
+                  <option value="3">三组学齐全</option>
+                  <option value="2">缺 1 路</option>
+                </select>
+              </label>
+              <label class="fld"><span class="fld__l">知情同意</span>
+                <select class="sel" id="fltCs" data-samp-flt="cs" style="width:auto">
+                  <option value="">全部</option>
+                  <option>已签署</option>
+                  <option>待补签</option>
+                  <option>已撤回</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn--quiet ml-auto" data-samp-fltreset><i class="fa-solid fa-rotate ico"></i>重置筛选</button>
+            </div>
+
+            <!-- 候选 chips 已撤（v27）：12 个样本 chip 的罗列与下方列表完全重复，
+                 选中样本走列表行（data-samp-pick 同一套委托）。空态提示保留。 -->
+            <div class="tempty" id="sampEmpty" hidden>
+              没有匹配的样本。样本 ID 形如 <code>S037</code>，也可以用受试者编号（<code>SUBJ-0371</code>）或疾病关键词检索。
+            </div>
+
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="sampTbl">
+                <thead><tr>
+                  <th class="nw"><button type="button" class="thsort" data-samp-sort="id">样本 ID<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
+                  <th class="nw">受试者</th>
+                  <th class="nw">性别 / 年龄</th>
+                  <th>疾病</th>
+                  <th class="nw">分期</th>
+                  <th class="nw"><button type="button" class="thsort" data-samp-sort="t">采集日期<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
+                  <th class="nw">存储位置</th>
+                  <th><button type="button" class="thsort" data-samp-sort="qc">质控结论<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
+                  <th class="nw">组学覆盖</th>
+                  <th class="num"><button type="button" class="thsort" data-samp-sort="docs">资料<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
+                  <th class="nw">知情同意</th>
+                </tr></thead>
+                <tbody id="sampTbody"></tbody>
+              </table>
+            </div>
+
+            <div class="pager mt-3" id="sampPager"></div>
+          </div>
+        </div>
+
+        <!-- 选中样本之后的五块（指标 / 信息 / 血缘 / 跨组学 / 资料）不在页面上，
+               整体搬到了右侧抽屉 #drawerSamp：列表负责「挑哪一例」，抽屉负责
+               「看这一例」。点行滑出，点另一行原地换内容，不用先关再开。
+               面板里只剩列表，是刻意的 —— 详情叠在列表下面时，翻到第 40 例
+               就得一路滚回去才知道自己看的是谁。 -->
+
+      </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         数据资产 · 文件管理（v33：从样本档案第三个 tab 升为独立二级菜单页）
+         三档可见范围就是权限模型：个人 = 仅本人；团队 = 按项目组共享、
+         带上传人；系统 = 平台公共参考数据、**全体可读，仅超级管理员可写**。
+         上传不限格式（file input 不设 accept），web / FTP 两条路。
+         v56：系统文件从「只读、整卡隐藏」改为「可上传，但按身份判权限」——
+         左侧上传卡不再按范围整块隐藏，只读身份看到的是一段说明。
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:files" data-proto-layer="0" id="page-files" aria-label="文件管理">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">数据资产 · 文件管理</div>
+          <h1 class="phead__h1">文件管理</h1>
+          <!-- v56：三档的读写差异写在页头，不必点进去才发现传不了。
+               文案随当前范围变化，由 renderFM() 写入 #fmScopeHint。 -->
+          <p class="phead__d" id="fmScopeHint"></p>
+        </div>
+      </div>
+
+      <div class="seg mb-4" id="fmSeg" role="tablist" aria-label="文件可见范围">
+          <button class="seg__b is-on" data-fmscope="mine" role="tab" aria-selected="true">个人文件</button>
+          <button class="seg__b" data-fmscope="team" role="tab" aria-selected="false">团队文件</button>
+          <button class="seg__b" data-fmscope="sys" role="tab" aria-selected="false">系统文件</button>
+        </div>
+
+        <div class="fmgrid">
+          <!-- 左：上传面板。v56 起三档都在（系统文件不再是整卡隐藏），
+               只读身份下这块由 JS 换成一段「为什么传不了」的说明。 -->
+          <div class="card" id="fmUpCard">
+            <div class="card__hd">
+              <span class="card__t">上传文件</span>
+              <span class="seg" role="tablist" aria-label="上传方式">
+                <button class="seg__b is-on" data-fmup="web" role="tab" aria-selected="true">web 上传</button>
+                <button class="seg__b" data-fmup="ftp" role="tab" aria-selected="false">FTP 上传</button>
+              </span>
+            </div>
+            <div class="card__bd" id="fmUpBody"></div>
+          </div>
+
+          <!-- 右：文件列表。工具条是静态骨架 —— 搜索框每敲一键都重绘
+               会丢焦点，所以 JS 只重绘表头与表体。 -->
+          <div class="card" id="fmListCard">
+            <div class="card__hd">
+              <span class="card__t" id="fmListT">个人文件列表</span>
+              <span class="card__d" id="fmCount">—</span>
+            </div>
+            <div class="card__bd">
+              <div class="row mb-3" id="fmTools">
+                <button type="button" class="btn btn--sm btn--primary" data-fm-newdir>
+                  <i class="fa-solid fa-folder-open ico"></i>新建文件夹</button>
+                <select class="sel" id="fmPjFlt" aria-label="按项目组筛选" hidden></select>
+                <input class="inp ml-auto" id="fmQ" placeholder="搜索文件名" aria-label="搜索文件名" autocomplete="off">
+              </div>
+              <div class="tblwrap">
+                <table class="tbl" aria-label="文件列表">
+                  <thead><tr id="fmHead"></tr></thead>
+                  <tbody id="fmBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         P-02 数据汇集页
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:p02" data-proto-layer="0" id="page-p02" aria-label="数据汇集页">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">步骤 1 / 5 · P-02</div>
+          <h1 class="phead__h1">数据汇集</h1>
+          <div class="stepper" data-stepper="1"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="stack">
+
+          <!-- v50 需求 2：「上传组学数据」拖拽区换成「选择文件」两栏选择器。
+               与文件管理、建项目向导第 2 步读同一份 FM_DATA，三处一个来源。
+               本机文件那条路没撤（见卡片底部那颗按钮与 #realFile）。 -->
+          <div class="card" data-anchor="选择组学数据">
+            <div class="card__hd">
+              <span class="card__t">选择组学数据</span>
+              <span class="card__d" id="p02PickMeta">尚未选择</span>
+            </div>
+            <div class="card__bd p02drop" id="p02Pick" data-dz></div>
+            <div class="card__bd pt-0">
+              <div class="hr"></div>
+              <div class="row mt-3">
+                <button class="btn" data-p02="pick-local"><i class="fa-solid fa-folder-open ico"></i>选择本机文件</button>
+                <span class="text-[12px] text-ink3">也可以把本机文件直接拖到上方区域</span>
+              </div>
+              <div class="hr mt-3"></div>
+              <div class="row mt-3">
+                <span class="text-[12px] text-ink3">载入示例数据：</span>
+                <button class="btn btn--sm" data-upload="vcf"><i class="fa-solid fa-file-csv ico"></i>变异文件</button>
+                <button class="btn btn--sm" data-upload="expr"><i class="fa-solid fa-table-cells ico"></i>表达矩阵</button>
+                <button class="btn btn--sm btn--quiet" data-upload="miss"><i class="fa-solid fa-triangle-exclamation ico"></i>含缺失矩阵</button>
+              </div>
+              <input type="file" id="realFile" class="dzf" tabindex="-1">
+              <div class="eng-only mt-4">
+                <div class="hr"></div>
+                <div class="grid2">
+                  <div class="fld">
+                    <span class="fld__l">VCF 最低版本</span>
+                    <span class="num text-[13px]">≥ 4.2</span>
+                    <span class="fld__h">低于 4.2 会被拒绝并提示升级</span>
+                  </div>
+                  <div class="fld">
+                    <span class="fld__l">文件编码</span>
+                    <span class="num text-[13px]">UTF-8（兼容 CRLF）</span>
+                    <span class="fld__h">GBK 编码的表型文件需转码</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" data-anchor="内置公开数据集">
+            <div class="card__hd">
+              <span class="card__t">内置公开数据集</span>
+              <span class="card__d" id="pubCount">6 个内置数据集</span>
+              <span class="tag tag--brand ml-auto">免上传 · 一键载入</span>
+            </div>
+            <div class="card__bd">
+              <div class="subhd"><span class="sp sp--human">人类</span><span class="subhd__t">Homo sapiens</span></div>
+              <div class="grid3 mt-2" id="pubGrid-human"></div>
+              <div class="subhd mt-4"><span class="sp sp--mouse">小鼠</span><span class="subhd__t">Mus musculus</span></div>
+              <div class="grid3 mt-2" id="pubGrid-mouse"></div>
+            </div>
+          </div>
+
+          <div class="card" id="fileCard" hidden>
+            <div class="card__hd"><span class="card__t">已识别的文件</span><span class="tag tag--ok" id="fileTag">校验通过</span></div>
+            <div class="card__bd"><div class="stack" id="fileList"></div></div>
+          </div>
+
+          <div class="card" data-anchor="参考基因组">
+            <div class="card__hd">
+              <span class="card__t">参考基因组</span>
+              <span class="card__d">已内置 3 个版本，索引无需自行下载</span>
+              <span class="tag tag--ok ml-auto" id="refAllTag">3 / 3 索引就绪</span>
+            </div>
+            <div class="card__bd">
+              <div class="grid3" id="refGrid"></div>
+              <div class="refsum mt-3" id="refSum"></div>
+              <div class="alert alert--warn mt-3" id="refWarn" hidden>
+                <span class="alert__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+                <div class="alert__bd">
+                  <div class="alert__t"><span class="alert__tag">警告</span>数据与参考基因组物种不一致</div>
+                  <p class="alert__p" id="refWarnBody"></p>
+                  <div class="alert__act">
+                    <button class="btn btn--sm btn--primary" data-refg="mm10" id="refWarnFix">改用 mm10（按数据集物种推荐）</button>
+                    <button class="btn btn--sm btn--quiet" data-refkeep>保持当前选择</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="anomP02" hidden>
+            <div class="card__hd"><span class="card__t">系统检测到的问题</span></div>
+            <div class="card__bd" id="anomP02Body"></div>
+          </div>
+
+          <div class="card" data-anchor="格式要求">
+            <div class="card__hd"><span class="card__t">支持的格式</span></div>
+            <div class="card__bd">
+              <div class="fmtgrid">
+                <div class="fmt"><span class="fmt__c">.vcf</span>变异调用格式</div>
+                <div class="fmt"><span class="fmt__c">.bcf</span>变异二进制格式</div>
+                <div class="fmt"><span class="fmt__c">.fastq</span>原始测序读长</div>
+                <div class="fmt"><span class="fmt__c">.bam</span>比对结果</div>
+                <div class="fmt"><span class="fmt__c">.csv</span>表格数据</div>
+                <div class="fmt"><span class="fmt__c">.tsv</span>表达矩阵</div>
+                <div class="fmt"><span class="fmt__c">.mzML</span>质谱原始数据</div>
+                <div class="fmt"><span class="fmt__c">.h5ad</span>单细胞矩阵</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card__hd"><span class="card__t">格式不支持时</span></div>
+            <div class="card__bd">
+              <p class="text-[13px] text-ink2">文件不在支持清单内时不会终止流程：系统会说明检测到的实际格式，并给出自动转换、下载模板、重新上传三个动作。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-end mt-4">
+        <button class="btn btn--primary" data-go="p04">下一步：流程模板<i class="fa-solid fa-arrow-right ico"></i></button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         P-04 分析流程选择页
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:p04" data-proto-layer="0" id="page-p04" aria-label="分析流程选择页">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">步骤 2 / 5 · P-04</div>
+          <h1 class="phead__h1">流程模板</h1>
+          <div class="stepper" data-stepper="2"></div>
+        </div>
+      </div>
+
+      <div class="sechd">
+        <span class="sechd__n">1</span>
+        <div>
+          <div class="sechd__t">选分析类型</div>
+          <p class="sechd__d">缺输入的流程会置灰并写明原因，不会出现点了没有反应的卡片。</p>
+        </div>
+      </div>
+
+      <div class="grid3 mb-4" id="pipelineGrid">
+
+        <!-- 蛋白组 / 代谢组置顶（v22）：这两条是本院重点线，排在最前两位。
+             代谢组那张因缺 .mzML 仍是「不可用」的灰卡，位置提前不代表它可点。 -->
+        <button class="pcard" data-pipe="prot">
+          <div class="pcard__ico"><i class="fa-solid fa-cubes ico"></i></div>
+          <div class="pcard__n">蛋白组定量分析</div>
+          <div class="pcard__d">从质谱原始数据检定量蛋白，输出差异倍数、PPI 互作网络与质谱图谱检索入口。</div>
+          <div class="pcard__f">
+            <span class="tag">输入 质谱 .mzML</span>
+            <span class="tag">预计 <span class="num">6:20</span></span>
+          </div>
+          <div class="pcard__f eng-only">
+            <span class="tag tag--brand">MaxQuant 2.4.0</span>
+            <span class="tag tag--brand">STRING 12.0</span>
+          </div>
+        </button>
+
+        <button class="pcard" data-pipe="metab" aria-disabled="true">
+          <div class="pcard__ico"><i class="fa-solid fa-atom ico"></i></div>
+          <div class="pcard__n">代谢组分析 <span class="tag tag--warn ml-1"><i class="fa-solid fa-lock ico"></i>不可用</span></div>
+          <div class="pcard__d">当前数据集里不含质谱原始文件（.mzML / .raw），因此无法启动代谢组流程。</div>
+          <div class="pcard__f">
+            <span class="tag tag--danger">缺少 .mzML 输入</span>
+          </div>
+        </button>
+
+        <button class="pcard" data-pipe="variant">
+          <div class="pcard__ico"><i class="fa-solid fa-dna ico"></i></div>
+          <div class="pcard__n">基因变异分析</div>
+          <div class="pcard__d">检出 SNP / 插入缺失 / CNV / SV，按 ACMG 标准做致病性分级，并比对 ClinVar 与 OMIM。</div>
+          <div class="pcard__f">
+            <span class="tag">输入 VCF / BCF</span>
+            <span class="tag">预计 <span class="num">4:12</span></span>
+          </div>
+          <div class="pcard__f eng-only">
+            <span class="tag tag--brand">GATK 4.5.0</span>
+            <span class="tag tag--brand">VEP 112</span>
+            <span class="tag tag--brand">GRCh38.p14</span>
+          </div>
+        </button>
+
+        <button class="pcard is-on" data-pipe="de">
+          <div class="pcard__ico"><i class="fa-solid fa-arrow-trend-up ico"></i></div>
+          <div class="pcard__n">差异表达分析</div>
+          <div class="pcard__d">比较组间基因表达差异，输出上调 / 下调基因、火山图、聚类热图与样本相关性。</div>
+          <div class="pcard__f">
+            <span class="tag">输入 表达矩阵</span>
+            <span class="tag">预计 <span class="num">3:05</span></span>
+          </div>
+          <div class="pcard__f eng-only">
+            <span class="tag tag--brand">DESeq2 1.42.0</span>
+            <span class="tag tag--brand">featureCounts 2.0.6</span>
+          </div>
+        </button>
+
+        <button class="pcard" data-pipe="enrich">
+          <div class="pcard__ico"><i class="fa-solid fa-diagram-project ico"></i></div>
+          <div class="pcard__n">功能富集分析</div>
+          <div class="pcard__d">对差异基因做 GO 与 KEGG 富集，输出显著条目、气泡图与通路层级网络。</div>
+          <div class="pcard__f">
+            <span class="tag">输入 差异基因列表</span>
+            <span class="tag">预计 <span class="num">1:40</span></span>
+          </div>
+          <div class="pcard__f eng-only">
+            <span class="tag tag--brand">clusterProfiler 4.10</span>
+          </div>
+        </button>
+
+      </div>
+
+      <div class="alert alert--info mb-4">
+        <span class="alert__ico"><i class="fa-solid fa-circle-info ico"></i></span>
+        <div class="alert__bd">
+          <div class="alert__t"><span class="alert__tag">提示</span>为什么代谢组流程是灰的</div>
+          <p class="alert__p">上游数据集只包含 VCF、表达矩阵与蛋白组定量表，没有质谱原始文件。这不是故障，也不影响其他流程。</p>
+          <div class="alert__act">
+            <button class="btn btn--sm" data-toast="已加载示例质谱数据集 TJ-TCM-2026_Metabolome.mzML（147 MB）"><i class="fa-solid fa-plus ico"></i>加载示例质谱数据</button>
+            <button class="btn btn--sm btn--quiet" data-go="p02">回到数据汇集补充上传</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           流程编排（内嵌画布）
+           工具库与 DAG 画布是「流程模板」这一步的能力，不再单开页 / 标签。
+           画布是可编辑的：载入模板后点工具库里的工具会往末尾接节点。
+       ═══════════════════════════════════════════════════════════ -->
+      <div class="sechd sechd--sub">
+        <span class="sechd__n">2</span>
+        <div>
+          <div class="sechd__t">自编排流程</div>
+          <p class="sechd__d">画布默认跟随上面选中的分析类型；切到工具库点任意工具即可往末尾接一个节点，连线自动补上。「节点列表」里能对任意节点做插入与删除，改完的流程另存为新模板后出现在左侧流程模板中。</p>
+        </div>
+      </div>
+
+      <div class="orch" id="orch">
+        <div class="orch__b">
+          <div class="orch__side">
+            <div class="seg seg--orch" role="tablist" aria-label="编排来源">
+              <button class="seg__b is-on" role="tab" aria-selected="true" data-orchseg="flows">流程模板</button>
+              <button class="seg__b" role="tab" aria-selected="false" data-orchseg="tools">工具库</button>
+            </div>
+            <div class="orch__srch">
+              <label class="sr" for="orchSrch">搜索流程或工具</label>
+              <div class="isrch">
+                <i class="fa-solid fa-magnifying-glass ico isrch__i" aria-hidden="true"></i>
+                <input class="inp" id="orchSrch" type="search" placeholder="搜索流程…" autocomplete="off">
+              </div>
+            </div>
+            <div class="orch__list" id="orchList"></div>
+          </div>
+          <div class="orch__main">
+            <div class="orch__bar">
+              <div class="orch__name" id="orchName"></div>
+              <div class="orch__stat" id="orchStat"></div>
+              <div class="row gap-2 ml-auto">
+                <button class="btn btn--sm btn--quiet" data-orch-reset aria-label="放弃自编排的改动，回到模板原始节点"><i class="fa-solid fa-rotate-left ico"></i>重置</button>
+                <button class="btn btn--sm" data-orch-full aria-pressed="false" aria-label="全屏打开外部编排系统"><i class="fa-solid fa-expand ico"></i>外部编排</button>
+                <button class="btn btn--sm" data-orch-alt aria-expanded="false"><i class="fa-solid fa-table-list ico"></i>节点列表</button>
+              </div>
+            </div>
+            <div class="orch__canvas" id="orchCanvas"></div>
+            <div class="orch__tbl" id="orchTable" hidden></div>
+            <div class="orch__foot">
+              <span class="orch__hint" id="orchHint" role="status" aria-live="polite"></span>
+              <div class="row gap-2 ml-auto">
+                <button class="btn btn--sm" data-orch-save><i class="fa-solid fa-floppy-disk ico"></i>另存为新模板</button>
+                <button class="btn btn--sm btn--primary" data-orch-run><i class="fa-solid fa-play ico"></i>运行此流程</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- v60：外部编排系统承载区（点「全屏」进入）。
+             默认 hidden —— 站内画布才是编排区的主内容，外部系统是全屏时才进的分支。
+             iframe 的 src 由 app.js 运行时 setAttribute 写入（地址唯一来源 ORCH_EXT_URL），
+             所以产物 HTML 里没有 src 属性，只能靠运行时探针断。 -->
+        <div class="orchext" id="orchExt" data-orchext hidden>
+          <div class="orchext__bar">
+            <span class="orchext__lab">外部编排系统</span>
+            <span class="orchext__url" data-orchexturl>—</span>
+            <span class="orchext__acts">
+              <button type="button" class="btn btn--sm" data-orchext-reload>重新加载</button>
+              <a class="btn btn--sm" data-orchext-open target="_blank" rel="noopener noreferrer">新标签打开</a>
+              <button type="button" class="btn btn--sm" data-orchext-back><i class="fa-solid fa-arrow-left ico"></i>返回站内画布</button>
+            </span>
+          </div>
+          <div class="orchext__ph" data-orchextph>正在加载外部编排系统…</div>
+          <div class="orchextfail" data-orchextfail hidden>
+            <span class="orchextfail__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+            <span class="orchextfail__t">外部编排系统暂不可达</span>
+            <span class="orchextfail__d">该地址需在可访问的网络中打开。可重新加载，或在新标签页直接打开。</span>
+            <span class="orchextfail__addr" data-orchextfailaddr>—</span>
+            <span class="orchextfail__acts">
+              <button type="button" class="btn btn--primary" data-orchext-reload>重新加载</button>
+              <a class="btn" data-orchext-open target="_blank" rel="noopener noreferrer">新标签打开</a>
+            </span>
+          </div>
+          <iframe class="orchext__el" data-orchextel title="外部编排系统"
+                  data-proto-scope="page:p04" data-proto-layer="1" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+
+      <div class="row justify-between">
+        <button class="btn btn--quiet" data-go="p02"><i class="fa-solid fa-arrow-left ico"></i>上一步</button>
+        <button class="btn btn--primary" data-go="p05">下一步：参数配置<i class="fa-solid fa-arrow-right ico"></i></button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         P-05 参数配置页
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:p05" data-proto-layer="0" id="page-p05" aria-label="参数配置页">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">步骤 3 / 5 · P-05</div>
+          <h1 class="phead__h1">参数配置</h1>
+          <div class="stepper" data-stepper="3"></div>
+        </div>
+      </div>
+
+      <div class="alert alert--info mb-4 cli-only">
+        <span class="alert__ico"><i class="fa-solid fa-circle-info ico"></i></span>
+        <div class="alert__bd">
+          <div class="alert__t"><span class="alert__tag">已选流程</span>差异表达分析 · TJ-TCM-2026 转录组 · 71 例共同样本</div>
+          <p class="alert__p">参数是按队列规模与数据类型给出的推荐值。</p>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="stack">
+
+          <!-- 推荐配置（所有人可见） -->
+          <div class="card cli-only" data-cfg="rec">
+            <div class="card__hd">
+              <span class="card__t">系统推荐配置</span>
+              <div class="seg ml-auto" role="tablist" aria-label="配置模式">
+                <button class="seg__b is-on" data-cfgmode="rec" role="tab" aria-selected="true">推荐</button>
+                <button class="seg__b" data-cfgmode="custom" role="tab" aria-selected="false">自定义</button>
+              </div>
+            </div>
+            <div class="card__bd">
+              <p class="text-[13.5px] text-ink2">按 <span class="num">75</span> 例样本的队列规模，采用社区标准的差异表达流程：以 GRCh38.p14 为参考基因组，显著性阈值取常规的 padj &lt; 0.05，表达变化要求至少 2 倍。这套配置在同类队列研究里是最常被审稿人接受的一组。</p>
+              <div class="grid3 mt-4">
+                <div class="card" style="border-radius:10px">
+                  <div class="card__bd">
+                    <div class="fld__l">
+                      <span class="term">判定标准
+                        <i class="fa-solid fa-circle-question term__i"></i>
+                        <span class="term__p">padj 是校正后的显著性水平。样本多了以后假阳性会变多，所以必须校正；数值越小越可信，0.05 是惯例分界。</span>
+                      </span>
+                    </div>
+                    <div class="mcell__v text-[19px] mt-1">padj &lt; 0.05</div>
+                    <div class="mcell__f">校正方法：Benjamini-Hochberg</div>
+                  </div>
+                </div>
+                <div class="card" style="border-radius:10px">
+                  <div class="card__bd">
+                    <div class="fld__l">
+                      <span class="term">变化幅度
+                        <i class="fa-solid fa-circle-question term__i"></i>
+                        <span class="term__p">log2FC 是表达变化倍数的以 2 为底对数。取值 1.0 意味着表达量至少变化到原来的 2 倍或一半。</span>
+                      </span>
+                    </div>
+                    <div class="mcell__v text-[19px] mt-1">|log2FC| ≥ 1.0</div>
+                    <div class="mcell__f">即至少上调或下调 2 倍</div>
+                  </div>
+                </div>
+                <div class="card" style="border-radius:10px">
+                  <div class="card__bd">
+                    <div class="fld__l">最低表达量</div>
+                    <div class="mcell__v text-[19px] mt-1">≥ 10</div>
+                    <div class="mcell__f">低于此值的基因先被过滤</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 自定义（简化表单） -->
+          <div class="card cli-only" data-cfg="custom" hidden>
+            <div class="card__hd">
+              <span class="card__t">自定义配置</span>
+              <div class="seg ml-auto" role="tablist" aria-label="配置模式">
+                <button class="seg__b" data-cfgmode="rec" role="tab" aria-selected="false">推荐</button>
+                <button class="seg__b is-on" data-cfgmode="custom" role="tab" aria-selected="true">自定义</button>
+              </div>
+            </div>
+            <div class="card__bd">
+              <p class="text-[13px] text-ink3 mb-4">这里只暴露三个会实质影响结论的选项。其余技术参数保持推荐值，需要时可在下面的完整参数面板里逐项调整。</p>
+              <div class="stack">
+                <div class="fld">
+                  <span class="fld__l">判定严格程度</span>
+                  <select class="sel" data-param="padjPlain">
+                    <option value="0.05" selected>标准（padj &lt; 0.05）—— 兼顾灵敏度与可信度，推荐</option>
+                    <option value="0.01">严格（padj &lt; 0.01）—— 结果更少但更稳，适合验证性研究</option>
+                    <option value="0.10">宽松（padj &lt; 0.10）—— 适合探索阶段，假阳性会变多</option>
+                  </select>
+                </div>
+                <div class="fld">
+                  <span class="fld__l">要求的最小变化倍数</span>
+                  <select class="sel" data-param="lfcPlain">
+                    <option value="1">2 倍（|log2FC| ≥ 1.0）—— 推荐</option>
+                    <option value="1.58">3 倍（|log2FC| ≥ 1.58）—— 更严格，结果更少但更稳</option>
+                    <option value="0.58">1.5 倍（|log2FC| ≥ 0.58）—— 更宽松，适合探索</option>
+                  </select>
+                </div>
+                <label class="chk"><input type="checkbox" checked data-param="filterLow">过滤低表达基因（表达量低于 10 的基因不参与统计）</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 完整参数树（.eng-only：普通用户看不到这批工程细节，见 app.css） -->
+          <div class="card eng-only">
+            <div class="card__hd">
+              <span class="card__t">完整参数面板</span>
+              <span class="tag tag--brand">高级参数</span>
+              <button class="btn btn--sm btn--quiet ml-auto" data-toast="参数已重置为上一次运行的快照">载入上次快照</button>
+            </div>
+            <div class="card__bd">
+              <div class="grid2">
+                <div class="fld"><span class="fld__l">参考基因组</span>
+                  <select class="sel" data-param="ref"><option>GRCh38.p14</option><option>GRCh37 / hg19</option><option>T2T-CHM13v2.0</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">比对工具</span>
+                  <select class="sel" data-param="aligner"><option>HISAT2 2.2.1</option><option>STAR 2.7.11b</option><option>Bowtie2 2.5.3</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">定量方法</span>
+                  <select class="sel" data-param="quant"><option>featureCounts 2.0.6</option><option>Salmon 1.10.2</option><option>HTSeq 2.0.5</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">差异分析算法</span>
+                  <select class="sel" data-param="de"><option>DESeq2 1.42.0</option><option>edgeR 4.0.16</option><option>limma-voom 3.58.1</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">|log2FC| 阈值</span>
+                  <input class="inp num" type="number" step="0.1" value="1.0" data-param="lfc">
+                  <span class="fld__h">取值域 0.1 – 5.0</span>
+                </div>
+                <div class="fld"><span class="fld__l">padj 阈值</span>
+                  <select class="sel" data-param="padj"><option value="0.05">0.05（推荐）</option><option value="0.01">0.01</option><option value="0.001">0.001</option><option value="0.1">0.10</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">多重检验校正</span>
+                  <select class="sel" data-param="adj"><option>Benjamini-Hochberg</option><option>Bonferroni</option><option>Benjamini-Yekutieli</option></select>
+                </div>
+                <div class="fld"><span class="fld__l">低表达过滤阈值</span>
+                  <input class="inp num" type="number" value="10" data-param="mincount">
+                </div>
+                <div class="fld"><span class="fld__l">线程数</span>
+                  <input class="inp num" type="number" value="12" data-param="threads">
+                </div>
+                <div class="fld"><span class="fld__l">内存上限 (GB)</span>
+                  <input class="inp num" type="number" value="48" data-param="mem">
+                </div>
+              </div>
+              <div class="hr"></div>
+              <div class="stack">
+                <label class="chk"><input type="checkbox" checked data-param="pair">启用配对设计（同一受试者的配对样本）</label>
+                <label class="chk"><input type="checkbox" data-param="batch">纳入批次效应校正（需提供批次字段）</label>
+                <label class="chk"><input type="checkbox" checked data-param="outlier">自动标记离群样本（不自动剔除）</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__hd">
+              <span class="card__t">参数确认摘要</span>
+              <span class="card__d">提交运行前请核对</span>
+            </div>
+            <div class="card__bd pt-0">
+              <div class="tblwrap mt-3">
+                <table class="tbl">
+                  <thead><tr><th>参数</th><th>取值</th><th>来源</th></tr></thead>
+                  <tbody id="sumBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card__ft">
+              <button class="btn btn--quiet" data-toast="已保存为个人默认配置，下次新建分析会自动套用"><i class="fa-solid fa-star ico"></i>存为我的默认</button>
+              <span class="text-[12px] text-ink3">预计耗时 <span class="num">3:05</span> · 占用 <span class="num">12</span> 核 / <span class="num">48</span> GB</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card__hd"><span class="card__t">预期输出</span><span class="tag tag--brand">随参数实时变化</span></div>
+            <div class="card__bd">
+              <div class="stack">
+                <div class="flex justify-between items-baseline">
+                  <span class="text-[13px] text-ink2">预计差异基因</span>
+                  <span class="num text-[19px]" id="expGenes">1,247</span>
+                </div>
+                <div class="flex justify-between items-baseline">
+                  <span class="text-[13px] text-ink2">其中上调</span>
+                  <span class="num text-[15px] text-danger" id="expUp">612</span>
+                </div>
+                <div class="flex justify-between items-baseline">
+                  <span class="text-[13px] text-ink2">其中下调</span>
+                  <span class="num text-[15px] text-brand-deep" id="expDown">635</span>
+                </div>
+                <div class="hr"></div>
+                <p class="text-[12.5px] text-ink3" id="expSay">按当前阈值，约 1,247 个基因会被判定为显著差异，与同队列规模研究的常见量级一致。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__hd"><span class="card__t">阈值依据</span></div>
+            <div class="card__bd">
+              <p class="text-[12.5px] text-ink2">三项判定阈值用于质量告警与统计功效提示，需与院方确认后集中配置。</p>
+              <div class="hr"></div>
+              <div class="stack text-[12.5px]">
+                <div class="flex justify-between"><span class="text-ink2">缺失率告警阈值</span><span class="num" id="thrMissing">20%</span></div>
+                <div class="flex justify-between"><span class="text-ink2">最小样本量</span><span class="num" id="thrNsample">30</span></div>
+                <div class="flex justify-between"><span class="text-ink2">队列告警位次</span><span class="num" id="thrQpos">5</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-between mt-4">
+        <button class="btn btn--quiet" data-go="p04"><i class="fa-solid fa-arrow-left ico"></i>上一步</button>
+        <div class="row">
+          <span class="text-[12.5px] text-ink3">提交后可在任务运行页查看进度与日志</span>
+          <!-- v52：挂点从 data-run 换成 data-runmeta —— 这一颗不再直接开跑，
+               而是先弹「完善项目信息」。留在 data-run 上会和任务运行页那颗
+               「开始运行」共用一条分支，而两者要做的事已经不同了。 -->
+          <button class="btn btn--primary" id="btnRunAna" data-runmeta><i class="fa-solid fa-play ico"></i>运行分析</button>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════════════════════════════════════════════════
+         P-06 任务运行页
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:p06" data-proto-layer="0" id="page-p06" aria-label="任务运行页">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">步骤 4 / 5 · P-06</div>
+          <h1 class="phead__h1">任务运行</h1>
+          <div class="stepper" data-stepper="4"></div>
+        </div>
+        <div class="phead__side">
+          <div class="row">
+            <span class="text-[12.5px] text-ink2">完成后通知我</span>
+            <button class="switch" role="switch" aria-checked="true" id="notifySwitch" aria-label="完成后通知我"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- v52：「完善项目信息」那张表的落点。填完就没了的话，那次填写就是假交互
+           （这条线的定位是「无假交互」）—— 四项在这里复述一遍，两项回填项也一并
+           写明，方便与页上别处的数字对账。
+           默认 hidden：直接进这一页（没走过「运行分析」）时不该出现。 -->
+      <div class="alert alert--info mb-4" id="runMetaBar" hidden>
+        <span class="alert__ico"><i class="fa-solid fa-circle-info ico"></i></span>
+        <div class="alert__bd">
+          <div class="alert__t"><span class="alert__tag">本次分析信息</span><span id="runMetaT">—</span></div>
+          <p class="alert__p" id="runMetaP"></p>
+        </div>
+      </div>
+
+      <div class="mrow mb-4">
+        <div class="mcell">
+          <div class="mcell__l">
+            <span class="term">队列位置
+              <i class="fa-solid fa-circle-question term__i"></i>
+              <span class="term__p">任务在算力队列中的排位。数字越小越先执行，位置 1 表示下一个就轮到。</span>
+            </span>
+          </div>
+          <div class="mcell__v" id="qPos">3</div>
+          <div class="mcell__f" id="qPosF">前方 2 个任务</div>
+        </div>
+        <div class="mcell">
+          <div class="mcell__l">预计剩余耗时</div>
+          <div class="mcell__v" id="etaV">4:12</div>
+          <div class="mcell__f">基于同规模历史任务中位数</div>
+        </div>
+        <div class="mcell">
+          <div class="mcell__l">当前进度</div>
+          <div class="mcell__v" id="pctV">0<span class="mcell__u">%</span></div>
+          <div class="mcell__f" id="stageV">等待调度</div>
+        </div>
+        <div class="mcell">
+          <div class="mcell__l">CPU 占用</div>
+          <div class="mcell__v">12<span class="mcell__u">/32 核</span></div>
+          <div class="mcell__f">内存 48 / 128 GB</div>
+        </div>
+      </div>
+
+      <!-- 任务流水线：阶段进度从「纵排五行列表」改成节点 + 连线（原列表已撤，
+           它与这张图讲的是同一件事）。**占满整幅**放在两栏之外 —— 五个节点要一眼看完，
+           塞进左栏（内容宽 ~571px）就只能横向滚动，流动关系反而看不出来。
+           节点与连线由 RUN_STAGES 渲染，阶段名 / 工具版本 / 耗时不在别处再写一遍。 -->
+      <div class="card mb-4">
+        <div class="card__hd">
+          <span class="card__t">任务流水线</span>
+          <span class="card__d" id="pipeMeta">—</span>
+        </div>
+        <div class="card__bd">
+          <div class="pipe" id="pipeFlow" role="list" aria-label="任务流水线"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="stack">
+
+          <div class="card">
+            <div class="card__hd">
+              <span class="card__t">任务 T-2409-018</span>
+              <span class="tag tag--brand" id="runTag"><i class="fa-solid fa-hourglass-half ico"></i>等待调度</span>
+              <span class="card__d ml-auto">差异表达分析 · TJ-TCM-2026 转录组 · 71 例样本</span>
+            </div>
+            <div class="card__bd">
+              <div class="row justify-between items-baseline mb-2">
+                <span class="text-[13px] text-ink2" id="runStageText">正在等待算力资源…</span>
+                <span class="num text-[15px]" id="runPctText">0%</span>
+              </div>
+              <div class="bar"><div class="bar__f" id="runBar" style="width:0%"></div></div>
+            </div>
+            <div class="card__ft">
+              <button class="btn btn--sm" id="btnRun" data-run><i class="fa-solid fa-play ico"></i>开始运行</button>
+              <button class="btn btn--sm btn--quiet" id="btnCancel" aria-disabled="true"><i class="fa-solid fa-ban ico"></i>取消任务</button>
+              <button class="btn btn--primary btn--sm ml-auto" id="btnResult" aria-disabled="true" data-res="de">
+                <i class="fa-solid fa-chart-line ico"></i>查看结果
+              </button>
+            </div>
+          </div>
+
+          <div class="card" id="anomP06" hidden>
+            <div class="card__hd"><span class="card__t">系统检测到的问题</span></div>
+            <div class="card__bd" id="anomP06Body"></div>
+          </div>
+
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card__hd">
+              <span class="card__t">运行日志</span>
+              <button class="btn btn--sm btn--quiet ml-auto" id="logToggle">收起</button>
+              <span class="tag ml-auto eng-only">实时输出</span>
+            </div>
+            <div class="card__bd">
+              <div class="log" id="logBox" aria-live="polite"></div>
+            </div>
+            <div class="card__ft eng-only">
+              <button class="btn btn--sm btn--quiet" data-dl="runlog"><i class="fa-solid fa-download ico"></i>导出日志</button>
+              <span class="text-[12px] text-ink3">最近 <span class="num">200</span> 行</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__hd"><span class="card__t">算力队列</span><span class="tag" id="queueCount">3 个任务</span></div>
+            <div class="card__bd" id="queueList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-between mt-4">
+        <button class="btn btn--quiet" data-go="p05"><i class="fa-solid fa-arrow-left ico"></i>上一步</button>
+        <div class="row">
+          <span class="text-[12.5px] text-ink3">任务提交后参数快照已冻结，结果可随时复现</span>
+          <button class="btn btn--primary" data-go="p07">下一步：查看分析结果<i class="fa-solid fa-arrow-right ico"></i></button>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════════════════════════════════════════════════
+         P-07 查看分析结果页（v51 · 智能分析第 5 步）
+    ═══════════════════════════════════════════════════════════ -->
+    <!-- v42 把「结果全景」从这条线上撤掉、降级成项目详情里的一层；
+         v51 请回来当第 5 步。请回来的方式不是复制一份内容，而是让它成为
+         #panoTpl 的**第二个宿主**：本页只给一个挂载点，进页面时由 mountPano()
+         把 template 克隆进来（两个宿主同一时刻只有一个有东西，见 mountPano）。
+         所以这一页里找不到第二个「结果视图」定义 —— 改内容只改 #panoTpl 一处，
+         项目详情那一层与本页会同时变。 -->
+    <section class="page" data-proto-scope="page:p07" data-proto-layer="0" id="page-p07" aria-label="查看分析结果页">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">步骤 5 / 5 · P-07</div>
+          <h1 class="phead__h1">查看分析结果</h1>
+          <div class="stepper" data-stepper="5"></div>
+        </div>
+        <div class="phead__side">
+          <div class="row">
+            <span class="tag tag--ok"><i class="fa-solid fa-circle-check ico"></i>分析完成</span>
+            <span class="text-[12.5px] text-ink2">任务 T-2409-018 · 差异表达分析 · 71 例样本</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 挂载点：内容由 mountPano('#resMount') 从 #panoTpl 克隆进来，
+           不在这里手写 —— 手写就等于同一个结果全景有第二份定义。 -->
+      <div id="resMount"></div>
+
+      <div class="row justify-between mt-4">
+        <button class="btn btn--quiet" data-go="p06"><i class="fa-solid fa-arrow-left ico"></i>上一步</button>
+        <div class="row">
+          <button class="btn" data-drawer="trace"><i class="fa-solid fa-code-branch ico"></i>查看可追溯链路</button>
+          <button class="btn btn--primary" data-go="p02"><i class="fa-solid fa-rotate-right ico"></i>基于这批数据发起新分析</button>
+        </div>
+      </div>
+    </section>
+    <!-- ═══════════════════════════════════════════════════════════
+         #panoTpl —— 「结果全景」的唯一事实来源（两个宿主共用）
+    ═══════════════════════════════════════════════════════════ -->
+    <!-- v42：结果全景从「智能分析第 5 步」降级成项目详情里的一层
+         （「分析结果 › 结果全景」），所以它从一个 <section class="page"> 变成
+         <template> —— template 的内容不进文档树（不渲染、不占位、不受切页影响），
+         由 mountPano() 在需要时克隆进宿主。
+         v51：它又成了智能分析第 5 步（#page-p07）的内容，于是有了第二个宿主。
+         这一步没有把它降回 <section>：**一份内容、两个宿主**比「两页各写一遍」
+         好守得多 —— 13 张图、三张空表体、6 个视图的口径说明都只在这里写一次。
+         代价是同一时刻只能有一个宿主装着它（template 里带着 #viewSeg 与三张表的 id，
+         两份同 id 会互相盖住），由 mountPano() 里的互斥清空保证。
+         原地留在页级、不搬进 JS 字符串：这段静态标记与「结果视图」的口径说明
+         绑在一起，拼成字符串就得把里面的引号转义一遍，改一次错一次。
+         页头（步骤 5/5 · P-07 · stepper）不在这里 —— 两个宿主的页头各不相同，
+         各由自己的宿主给（项目详情走 renderProjHead，第 5 步走页面里的 .phead）；
+         「运行详情 / 导出结果」两颗按钮留在这块内容里 —— 它们属于结果本身，
+         不属于任一页头，两个宿主都该有。
+    ═══════════════════════════════════════════════════════════ -->
+    <template id="panoTpl">
+      <div class="card mb-4">
+        <div class="card__bd">
+          <div class="row">
+            <span class="text-[13px] text-ink2">结果视图</span>
+            <div class="seg" id="viewSeg" role="tablist" aria-label="结果视图">
+              <button class="seg__b is-on" data-view="variant" role="tab" aria-selected="true">基因变异</button>
+              <button class="seg__b" data-view="de" role="tab" aria-selected="false">差异表达</button>
+              <button class="seg__b" data-view="enrich" role="tab" aria-selected="false">功能富集</button>
+              <button class="seg__b" data-view="prot" role="tab" aria-selected="false">蛋白组</button>
+              <button class="seg__b" data-view="metab" role="tab" aria-selected="false">代谢组</button>
+              <button class="seg__b" data-view="align" role="tab" aria-selected="false">跨组学对齐</button>
+            </div>
+            <span class="row ml-auto">
+              <button type="button" class="btn btn--sm" data-drawer="trace"><i class="fa-solid fa-code-branch ico"></i>运行详情</button>
+              <button type="button" class="btn btn--sm" data-dl="resultzip"><i class="fa-solid fa-download ico"></i>导出结果</button>
+            </span>
+          </div>
+          <div class="hr"></div>
+          <p class="text-[12.5px] text-ink3">
+            口径说明：本页使用<strong class="text-ink2">组学分析口径</strong>——差异基因、变异位点、富集通路、蛋白互作、代谢通路，
+            全部指标都来自本次组学分析本身。机器学习模型相关的评估指标（准确率 / 召回率 / F1 / AUC 等）属于另一套口径，
+            不在本页呈现，两套指标不会混排在同一页面。
+          </p>
+        </div>
+      </div>
+
+      <!-- ── 基因变异 ── -->
+      <div class="rview is-on" data-view="variant">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：在 71 例样本中共检出 13,588 个变异，其中 111 个达到致病或可能致病级别</div>
+            <p class="alert__p">致病性判定依据 ACMG 标准，并已比对 ClinVar（命中 <span class="num">1,284</span> 个）与 OMIM（命中 <span class="num">63</span> 个）。111 个高等级变异集中在 7 条染色体上，建议优先复核 17q12 区域。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">变异总数</div><div class="mcell__v">13,588</div><div class="mcell__f">71 例样本合计</div></div>
+          <div class="mcell"><div class="mcell__l">SNP</div><div class="mcell__v">11,203</div><div class="mcell__f">占 82.4%</div></div>
+          <div class="mcell"><div class="mcell__l">插入缺失</div><div class="mcell__v">1,102</div><div class="mcell__f">占 8.1%</div></div>
+          <div class="mcell"><div class="mcell__l">CNV</div><div class="mcell__v">412</div><div class="mcell__f">占 3.0%</div></div>
+          <div class="mcell"><div class="mcell__l">SV</div><div class="mcell__v">871</div><div class="mcell__f">占 6.4%</div></div>
+          <div class="mcell"><div class="mcell__l">ClinVar 命中</div><div class="mcell__v">1,284</div><div class="mcell__f">OMIM 63</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">染色体分布（曼哈顿图）</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="manhattan"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">ACMG 致病性分级分布</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="acmg"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">高等级变异清单</span><span class="card__d">致病 / 可能致病，按 ACMG 等级排序</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="patho"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="pathoTbl">
+                <thead><tr><th>基因</th><th>位置</th><th>变异</th><th>ACMG</th><th class="num">ClinVar</th><th class="num">携带样本</th></tr></thead>
+                <tbody>
+                  <tr><td class="num">BRCA1</td><td class="num">17:43,057,045</td><td class="num">c.5266dupC</td><td><span class="tag tag--danger">致病</span></td><td class="num">Pathogenic</td><td class="num">4</td></tr>
+                  <tr><td class="num">TP53</td><td class="num">17:7,674,220</td><td class="num">c.743G&gt;A</td><td><span class="tag tag--danger">致病</span></td><td class="num">Pathogenic</td><td class="num">3</td></tr>
+                  <tr><td class="num">MLH1</td><td class="num">3:37,034,890</td><td class="num">c.350C&gt;T</td><td><span class="tag tag--danger">致病</span></td><td class="num">Pathogenic</td><td class="num">2</td></tr>
+                  <tr><td class="num">ATM</td><td class="num">11:108,235,712</td><td class="num">c.7271T&gt;G</td><td><span class="tag tag--warn">可能致病</span></td><td class="num">Likely path.</td><td class="num">9</td></tr>
+                  <tr><td class="num">CHEK2</td><td class="num">22:28,687,894</td><td class="num">c.1100delC</td><td><span class="tag tag--warn">可能致病</span></td><td class="num">Likely path.</td><td class="num">7</td></tr>
+                  <tr><td class="num">PALB2</td><td class="num">16:23,614,010</td><td class="num">c.3113G&gt;A</td><td><span class="tag tag--warn">可能致病</span></td><td class="num">Likely path.</td><td class="num">5</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 差异表达 ── -->
+      <div class="rview" data-view="de">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：71 例样本中检出 1,247 个差异表达基因，上调 612、下调 635</div>
+            <p class="alert__p">判定标准为 <span class="num">padj &lt; 0.05</span> 且 <span class="num">|log2FC| ≥ 1.0</span>。差异最显著的基因是 <span class="num">CYP3A4</span>（padj = <span class="num">3.2e-09</span>），在聚类热图上可以看到处理组与对照组被完整分开。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">差异基因</div><div class="mcell__v">1,247</div><div class="mcell__f">总量</div></div>
+          <div class="mcell mcell--up"><div class="mcell__l">上调</div><div class="mcell__v">612</div><div class="mcell__f">log2FC ≥ 1.0</div></div>
+          <div class="mcell mcell--down"><div class="mcell__l">下调</div><div class="mcell__v">635</div><div class="mcell__f">log2FC ≤ -1.0</div></div>
+          <div class="mcell"><div class="mcell__l">最小 padj</div><div class="mcell__v">3.2e-09</div><div class="mcell__f">CYP3A4</div></div>
+          <div class="mcell"><div class="mcell__l">样本相关性</div><div class="mcell__v">0.94</div><div class="mcell__f">组内中位 Pearson r</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">火山图</span><span class="card__d">横轴 log2FC · 纵轴 -log10(padj)</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="volcano"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">聚类热图</span><span class="card__d">24 个代表性差异基因 × 12 例样本</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="heatmap"></div></div>
+          </div>
+        </div>
+
+        <div class="card mb-4"><div class="card__hd"><span class="card__t">样本相关性矩阵</span></div>
+          <div class="card__bd"><div class="chartbox" data-chart="corr"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">差异基因清单</span><span class="card__d">按 padj 升序，前 8 条</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="diffgenes"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="diffGeneTbl">
+                <thead><tr><th>基因</th><th>名称</th><th class="num">log2FC</th><th class="num">padj</th><th class="num">平均表达量</th><th>方向</th></tr></thead>
+                <tbody>
+                  <tr><td class="num">CYP3A4</td><td class="text-ink3">细胞色素 P450 3A4</td><td class="num">3.84</td><td class="num">3.2e-09</td><td class="num">1,842</td><td><span class="tag tag--danger"><i class="fa-solid fa-arrow-trend-up ico"></i>上调</span></td></tr>
+                  <tr><td class="num">ALB</td><td class="text-ink3">白蛋白</td><td class="num">-3.21</td><td class="num">8.7e-09</td><td class="num">42,118</td><td><span class="tag tag--brand"><i class="fa-solid fa-arrow-trend-down ico"></i>下调</span></td></tr>
+                  <tr><td class="num">APOA1</td><td class="text-ink3">载脂蛋白 A1</td><td class="num">-2.96</td><td class="num">1.4e-08</td><td class="num">18,204</td><td><span class="tag tag--brand"><i class="fa-solid fa-arrow-trend-down ico"></i>下调</span></td></tr>
+                  <tr><td class="num">TNF</td><td class="text-ink3">肿瘤坏死因子</td><td class="num">2.71</td><td class="num">2.9e-08</td><td class="num">846</td><td><span class="tag tag--danger"><i class="fa-solid fa-arrow-trend-up ico"></i>上调</span></td></tr>
+                  <tr><td class="num">IL6</td><td class="text-ink3">白细胞介素 6</td><td class="num">2.55</td><td class="num">5.1e-08</td><td class="num">1,106</td><td><span class="tag tag--danger"><i class="fa-solid fa-arrow-trend-up ico"></i>上调</span></td></tr>
+                  <tr><td class="num">SLC22A1</td><td class="text-ink3">有机阳离子转运体 1</td><td class="num">-2.18</td><td class="num">7.6e-08</td><td class="num">2,340</td><td><span class="tag tag--brand"><i class="fa-solid fa-arrow-trend-down ico"></i>下调</span></td></tr>
+                  <tr><td class="num">GSTM1</td><td class="text-ink3">谷胱甘肽 S-转移酶 M1</td><td class="num">-1.94</td><td class="num">1.2e-07</td><td class="num">3,915</td><td><span class="tag tag--brand"><i class="fa-solid fa-arrow-trend-down ico"></i>下调</span></td></tr>
+                  <tr><td class="num">NFKB1</td><td class="text-ink3">核因子 κB 亚单位 1</td><td class="num">1.82</td><td class="num">1.9e-07</td><td class="num">4,082</td><td><span class="tag tag--danger"><i class="fa-solid fa-arrow-trend-up ico"></i>上调</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 功能富集 ── -->
+      <div class="rview" data-view="enrich">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：1,247 个差异基因显著富集到 186 个 GO 条目与 47 条 KEGG 通路</div>
+            <p class="alert__p">最强富集集中在<strong class="text-ink2">药物代谢—细胞色素 P450</strong> 与<strong class="text-ink2">炎症反应</strong>两个方向，与差异表达页里 CYP3A4 上调、TNF / IL6 升高的结果互相印证。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">GO 显著条目</div><div class="mcell__v">186</div><div class="mcell__f">padj &lt; 0.05</div></div>
+          <div class="mcell"><div class="mcell__l">生物学过程 BP</div><div class="mcell__v">112</div><div class="mcell__f">占 60.2%</div></div>
+          <div class="mcell"><div class="mcell__l">分子功能 MF</div><div class="mcell__v">41</div><div class="mcell__f">占 22.0%</div></div>
+          <div class="mcell"><div class="mcell__l">细胞组分 CC</div><div class="mcell__v">33</div><div class="mcell__f">占 17.7%</div></div>
+          <div class="mcell"><div class="mcell__l">KEGG 通路</div><div class="mcell__v">47</div><div class="mcell__f">最强：hsa00982</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">富集气泡图</span><span class="card__d">气泡大小 = 基因数 · 颜色 = padj</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="bubble"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">通路层级网络</span><span class="card__d">节点 = 通路 · 连线 = 共享基因</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="pathway"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">显著通路清单</span><span class="card__d">按 padj 升序，前 8 条</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="enrich"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="enrichTbl">
+                <thead><tr><th>通路 ID</th><th>通路名称</th><th>库</th><th class="num">基因数</th><th class="num">padj</th></tr></thead>
+                <tbody id="enrichTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 蛋白组 ── -->
+      <div class="rview" data-view="prot">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：定量到 6,842 个蛋白，其中 318 个在组间存在显著差异</div>
+            <p class="alert__p">上调 <span class="num">174</span> 个、下调 <span class="num">144</span> 个。互作网络显示差异蛋白集中在<strong class="text-ink2">补体与凝血级联</strong>模块，与转录组层面的 ALB、APOA1 下调方向一致。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">定量蛋白</div><div class="mcell__v">6,842</div><div class="mcell__f">FDR &lt; 0.01</div></div>
+          <div class="mcell"><div class="mcell__l">差异蛋白</div><div class="mcell__v">318</div><div class="mcell__f">占 4.6%</div></div>
+          <div class="mcell mcell--up"><div class="mcell__l">上调</div><div class="mcell__v">174</div><div class="mcell__f">FC ≥ 1.5</div></div>
+          <div class="mcell mcell--down"><div class="mcell__l">下调</div><div class="mcell__v">144</div><div class="mcell__f">FC ≤ 0.67</div></div>
+          <div class="mcell"><div class="mcell__l">鉴定肽段</div><div class="mcell__v">48,206</div><div class="mcell__f">唯一肽段</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">差异蛋白倍数分布</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="protbar"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">蛋白互作网络（PPI）</span><span class="card__d">STRING 12.0 · 置信度 ≥ 0.7</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="ppi"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">差异蛋白清单</span><span class="card__d">按差异倍数排序，前 6 条</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="diffprot"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="protTbl">
+                <thead><tr><th>蛋白</th><th>名称</th><th class="num">差异倍数</th><th class="num">padj</th><th>方向</th></tr></thead>
+                <tbody id="protTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 代谢组 ── -->
+      <div class="rview" data-view="metab">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：定量到 1,106 个代谢物，其中 143 个存在显著差异，化合物鉴定率 85.3%</div>
+            <p class="alert__p">差异代谢物主要映射到<strong class="text-ink2">胆汁酸生物合成</strong>与<strong class="text-ink2">亚油酸代谢</strong>两条通路，可与蛋白组 / 转录组的代谢酶变化串起来看。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">定量代谢物</div><div class="mcell__v">1,106</div><div class="mcell__f">正负离子模式合计</div></div>
+          <div class="mcell"><div class="mcell__l">差异代谢物</div><div class="mcell__v">143</div><div class="mcell__f">VIP &gt; 1 且 padj &lt; 0.05</div></div>
+          <div class="mcell"><div class="mcell__l">化合物鉴定率</div><div class="mcell__v">85.3<span class="mcell__u">%</span></div><div class="mcell__f">MS2 匹配置信度 ≥ 0.7</div></div>
+          <div class="mcell"><div class="mcell__l">KEGG 映射</div><div class="mcell__v">892</div><div class="mcell__f">HMDB 1,004 · MetCyc 337</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">通路映射结果</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="metabpath"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">代谢物分类构成</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="metabclass"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">差异代谢物清单</span><span class="card__d">按 VIP 降序，前 6 条</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="diffmeta"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="metabTbl">
+                <thead><tr><th>代谢物</th><th>HMDB ID</th><th class="num">VIP</th><th class="num">差异倍数</th><th>鉴定置信度</th></tr></thead>
+                <tbody id="metabTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 跨组学对齐 ── -->
+      <div class="rview" data-view="align">
+        <div class="alert alert--ok mb-4">
+          <span class="alert__ico"><i class="fa-solid fa-circle-check ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">结论：三组学对齐成功率 94.7%，得到 71 例可用于联合分析的共同样本</div>
+            <p class="alert__p">4 例未匹配样本的缺失在三个组学里是同时发生的，说明属于整批样本的样本采集问题，而不是某个组学的数据丢失。整批剔除不会破坏配对结构。</p>
+          </div>
+        </div>
+
+        <div class="mrow mb-4">
+          <div class="mcell"><div class="mcell__l">对齐成功率</div><div class="mcell__v">94.7<span class="mcell__u">%</span></div><div class="mcell__f">71 / 75</div></div>
+          <div class="mcell"><div class="mcell__l">共同样本</div><div class="mcell__v">71</div><div class="mcell__f">三组学交集</div></div>
+          <div class="mcell"><div class="mcell__l">未匹配样本</div><div class="mcell__v">4</div><div class="mcell__f">已在第 2 步逐条处理</div></div>
+          <div class="mcell"><div class="mcell__l">整体缺失率</div><div class="mcell__v">8.4<span class="mcell__u">%</span></div><div class="mcell__f">低于阈值 20%</div></div>
+        </div>
+
+        <div class="grid2 mb-4">
+          <div class="card"><div class="card__hd"><span class="card__t">组学覆盖分布</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="cover"></div></div>
+          </div>
+          <div class="card"><div class="card__hd"><span class="card__t">缺失矩阵</span><span class="card__d">行 = 组学 · 列 = 样本分组</span></div>
+            <div class="card__bd"><div class="chartbox" data-chart="missing"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd"><span class="card__t">对齐明细</span><span class="card__d">按对齐表</span>
+            <button class="btn btn--sm btn--quiet ml-auto" data-dl="alignmatrix"><i class="fa-solid fa-download ico"></i>导出</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap mt-3">
+              <table class="tbl" id="alignTbl">
+                <thead><tr><th>组学</th><th>来源文件</th><th class="num">样本数</th><th class="num">与其他组学交集</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>基因组</td><td class="num text-ink3">TJ-TCM_WGS.vcf.gz</td><td class="num">75</td><td class="num">71</td><td><span class="tag tag--ok">已对齐</span></td></tr>
+                  <tr><td>转录组</td><td class="num text-ink3">TJ-TCM_RNA_counts.tsv</td><td class="num">75</td><td class="num">71</td><td><span class="tag tag--ok">已对齐</span></td></tr>
+                  <tr><td>蛋白组</td><td class="num text-ink3">TJ-TCM_Proteome.tsv</td><td class="num">71</td><td class="num">71</td><td><span class="tag tag--warn">缺 4 例</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-end mt-4">
+        <!-- 「返回任务」删掉：进了项目层，返回只有面包屑一条路（v17），
+             再说这里也不是「任务」的下游。
+             「查看可追溯链路」也删掉 —— 它和顶部那颗「运行详情」开的是同一个抽屉，
+             一屏里两个入口只会让人猜哪个是正路。 -->
+        <button type="button" class="btn btn--primary" data-go="p02"><i class="fa-solid fa-rotate-right ico"></i>基于这批数据发起新分析</button>
+      </div>
+    </template>
+
+    <!-- ═══════════ 知识赋能 · 医学知识库（P2 · F-16 · v35 按参考系统改版） ═══════════
+结构对齐「样本库质量管理智能平台 › 知识库 › 临床知识库」：
+         检索 / 浏览双模式 + 分类词云 + 最近更新（行内「新增」）+ 字母筛选词条表 + 词条详情。
+         v58：本页默认展示外部知识系统的 /ke 路径（iframe 挂在页内），站内那份
+         收进「站内版本」—— 两个入口都在，不因内网不通就丢掉内容。 -->
+    <section class="page" data-proto-scope="page:kbmed" data-proto-layer="0" id="page-kbmed" aria-label="医学知识库" data-kbview="ext">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">知识赋能 · 医学知识库 · P2</div>
+          <h1 class="phead__h1">医学知识库</h1>
+        </div>
+        <div class="phead__side">
+          <div class="seg kbview__seg" role="group" aria-label="医学知识库内容来源">
+            <button type="button" class="seg__b" data-kbview="ext" aria-selected="true">外部系统</button>
+            <button type="button" class="seg__b" data-kbview="local" aria-selected="false">站内版本</button>
+          </div>
+          <button class="btn btn--primary" data-kb2add><i class="fa-solid fa-plus ico"></i>新增</button>
+          <button class="btn" data-dl="kbresult"><i class="fa-solid fa-download ico"></i>导出知识清单</button>
+        </div>
+      </div>
+
+      <!-- v58：外部系统挂载区。src 由 renderKbFrame() 按 KB_EXT 写入，
+           不在 HTML 里写死 —— 地址只在 KB_EXT_BASE / KB_EXT 一处定义。 -->
+      <div class="kbframe" id="kbframe-kbmed" data-kbframe="kbmed">
+        <div class="kbframe__bar">
+          <span class="kbframe__lab">外部知识系统</span>
+          <span class="kbframe__url" data-kburl>—</span>
+          <span class="kbframe__acts">
+            <button type="button" class="btn btn--sm" data-kbreload>重新加载</button>
+            <a class="btn btn--sm" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <div class="kbframe__ph" data-kbph>正在加载外部知识系统…</div>
+        <div class="kbfail" data-kbfail hidden>
+          <span class="kbfail__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+          <span class="kbfail__t">外部知识系统暂不可达</span>
+          <span class="kbfail__d">该地址在内网中提供，当前网络可能未接入。确认已连到内网后可重新加载，或在新标签页直接打开。</span>
+          <span class="kbfail__addr" data-kbfailaddr>—</span>
+          <span class="kbfail__acts">
+            <button type="button" class="btn btn--primary" data-kbreload>重新加载</button>
+            <a class="btn" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <iframe class="kbframe__el" data-kbframeel title="医学知识库（外部知识系统）"
+                data-proto-scope="page:kbmed" data-proto-layer="1" referrerpolicy="no-referrer"></iframe>
+      </div>
+
+      <div data-kblocal>
+      <div class="kbm-hero">
+        <div class="seg kbm__seg" role="tablist" aria-label="知识库模式">
+          <button class="seg__b is-on" data-kb2mode="search" role="tab" aria-selected="true">检 索</button>
+          <button class="seg__b" data-kb2mode="browse" role="tab" aria-selected="false">浏 览</button>
+          <button class="seg__b" data-kb2mode="admin" role="tab" aria-selected="false">管 理</button>
+        </div>
+      </div>
+
+      <!-- 知识域胶囊：临床诊疗★ / 生物样本 / 多组学 / 权威文献（检索/浏览/管理三态共享） -->
+      <div class="kbm-dom" id="kbmDom" role="tablist" aria-label="知识域"></div>
+
+      <!-- 检索视图：分类 + 关键词搜索条 / 词云 + 最近更新 -->
+      <div id="kbmSearchView">
+        <div class="kbm-band">
+          <label class="sr" for="kb2Cat">知识分类</label>
+          <select class="sel" id="kb2Cat" aria-label="知识分类">
+            <option>全部</option><option>疾病</option><option>症状</option><option>检查</option><option>药品</option>
+          </select>
+          <div class="kbm-band__in">
+            <label class="sr" for="kb2Q">知识检索</label>
+            <input class="inp" id="kb2Q" type="search" placeholder="请输入内容" autocomplete="off">
+          </div>
+          <button class="btn btn--primary" data-kb2search><i class="fa-solid fa-magnifying-glass ico"></i>搜索</button>
+        </div>
+
+        <div id="kbmSearchHome">
+          <div class="kbm-home">
+            <div class="kbm-cloud" id="kbmCloud" aria-label="知识词云（点击词条查看详情）"></div>
+            <div class="card kbm-recent">
+              <div class="card__hd">
+                <span class="card__t">最近更新</span>
+              </div>
+              <div class="card__bd" id="kbmRecent"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="kbmSearchRes" class="mt-4" hidden>
+          <div class="card">
+            <div class="card__hd">
+              <span class="card__t">检索结果</span>
+              <span class="tag tag--brand"><span id="kb2Count">0</span> 个词条</span>
+              <button class="btn btn--sm btn--quiet ml-auto" data-kb2clear><i class="fa-solid fa-arrow-left ico"></i>返回</button>
+            </div>
+            <div class="card__bd"><div class="kbm-words kbm-words--hit" id="kbmResList"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 浏览视图：左侧分类菜单 + 字母筛选词条表 -->
+      <div id="kbmBrowseView" hidden>
+        <div class="kbm-grid">
+          <nav class="kbm-menu" id="kbmMenu" aria-label="知识分类菜单"></nav>
+          <div class="card">
+            <div class="card__hd kbm-flt" id="kbmFlt"></div>
+            <div class="card__bd"><div class="kbm-words kbm-words--3" id="kbmWordList"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 管理视图：知识全生命周期（采集 → 审核 → 发布 → 更新 → 归档） -->
+      <div id="kbmAdminView" hidden>
+        <!-- v54 权限说明：审核发布 / 归档 / 恢复是审批动作，只有「普通管理员」及以上能做。
+             徽标与提示都由 renderKb2Admin() 按当前身份刷新 —— 权限看不见等于没做。 -->
+        <div class="alert alert--warn mb-3" id="kbmAprHint" hidden>
+          <span class="alert__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+          <div class="alert__bd">
+            <div class="alert__t">当前身份为「<span id="kbmAprRole">普通用户</span>」：只能查看与提交采集</div>
+            <p class="alert__p">审核发布、归档与恢复需要「普通管理员」及以上。可在顶栏「当前用户」处切换角色。</p>
+          </div>
+        </div>
+        <div class="kbm-pipe card" id="kbmPipe" aria-label="生命周期管道"></div>
+        <div class="card mt-3">
+          <div class="card__hd kbm-flt" id="kbmAFlt"></div>
+          <div class="card__bd card__bd--flush">
+            <table class="tbl" id="kbmAdmTbl">
+              <thead><tr><th>词条</th><th>知识域</th><th>分类</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 词条详情：页内层级，返回走页内面包屑（v17 规约：返回只有面包屑一条路） -->
+      <div id="kbmDetailView" hidden>
+        <div class="kbm-crumb" aria-label="页内位置">
+          <button type="button" class="linkbtn" data-kb2back>医学知识库</button>
+          <span class="kbm-crumb__s">›</span><span id="kbmCrumbMode">浏览</span>
+          <span class="kbm-crumb__s">›</span><span>详情</span>
+        </div>
+        <div class="card mt-3">
+          <div class="card__bd">
+            <h2 class="kbm-dt" id="kbmDetailT"></h2>
+            <div id="kbmDetail"></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /data-kblocal -->
+    </section>
+
+    <!-- ═══════════ 知识赋能 · 自有知识库（P2 · F-17） ═══════════
+         v58：同医学知识库，默认挂载外部 /kb 路径。 -->
+    <section class="page" data-proto-scope="page:kbown" data-proto-layer="0" id="page-kbown" aria-label="自有知识库" data-kbview="ext">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">知识赋能 · 自有知识库 · P2</div>
+          <h1 class="phead__h1">自有知识库</h1>
+        </div>
+        <div class="phead__side">
+          <div class="seg kbview__seg" role="group" aria-label="自有知识库内容来源">
+            <button type="button" class="seg__b" data-kbview="ext" aria-selected="true">外部系统</button>
+            <button type="button" class="seg__b" data-kbview="local" aria-selected="false">站内版本</button>
+          </div>
+          <button class="btn btn--primary" data-kbupload><i class="fa-solid fa-cloud-arrow-up ico"></i>上传自有知识库</button>
+        </div>
+      </div>
+
+      <div class="kbframe" id="kbframe-kbown" data-kbframe="kbown">
+        <div class="kbframe__bar">
+          <span class="kbframe__lab">外部知识系统</span>
+          <span class="kbframe__url" data-kburl>—</span>
+          <span class="kbframe__acts">
+            <button type="button" class="btn btn--sm" data-kbreload>重新加载</button>
+            <a class="btn btn--sm" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <div class="kbframe__ph" data-kbph>正在加载外部知识系统…</div>
+        <div class="kbfail" data-kbfail hidden>
+          <span class="kbfail__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+          <span class="kbfail__t">外部知识系统暂不可达</span>
+          <span class="kbfail__d">该地址在内网中提供，当前网络可能未接入。确认已连到内网后可重新加载，或在新标签页直接打开。</span>
+          <span class="kbfail__addr" data-kbfailaddr>—</span>
+          <span class="kbfail__acts">
+            <button type="button" class="btn btn--primary" data-kbreload>重新加载</button>
+            <a class="btn" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <iframe class="kbframe__el" data-kbframeel title="自有知识库（外部知识系统）"
+                data-proto-scope="page:kbown" data-proto-layer="1" referrerpolicy="no-referrer"></iframe>
+      </div>
+
+      <div data-kblocal>
+      </div>
+
+      <div class="card">
+        <div class="card__hd">
+          <span class="card__t">自有知识库上传解析</span>
+          <span class="card__d">支持 PDF / Word / Excel / TXT；解析后自动向量化并标注关键信息</span>
+          <span class="tag tag--hint ml-auto">F-17 · 相应条款 57–60</span>
+        </div>
+        <div class="card__bd">
+          <div class="grid2">
+            <div class="stack">
+              <div class="dz" data-kbupload>
+                <div class="dz__ico"><i class="fa-solid fa-file-pdf ico"></i></div>
+                <div class="dz__t">点此上传，或把文件拖到这里</div>
+                <div class="dz__d">将载入示例文件「院内心衰随访表.pdf」并走完解析流程</div>
+              </div>
+              <div class="fmtgrid">
+                <div class="fmt"><span class="fmt__c">.pdf</span>版面还原 + 文本抽取</div>
+                <div class="fmt"><span class="fmt__c">.docx</span>段落与表格解析</div>
+                <div class="fmt"><span class="fmt__c">.xlsx</span>按行转为知识条目</div>
+                <div class="fmt"><span class="fmt__c">.txt</span>按标题切分</div>
+              </div>
+              <div class="alert alert--info">
+                <span class="alert__ico"><i class="fa-solid fa-circle-info ico"></i></span>
+                <div class="alert__bd">
+                  <div class="alert__t">增量更新与版本管理</div>
+                  <p class="alert__p">同一份文件重复上传时不会新建条目，而是比对新旧内容、只更新变化的部分，并把版本号加一，历史版本可回滚。</p>
+                </div>
+              </div>
+            </div>
+            <div id="kbParse" hidden></div>
+          </div>
+          <div class="hr"></div>
+          <div class="card__t mb-2">已入库文件与版本</div>
+          <div class="tblwrap">
+            <table class="tbl">
+              <thead><tr><th>文件</th><th class="num">大小</th><th class="num">片段数</th><th>版本</th><th class="num">更新时间</th><th class="num">变更</th></tr></thead>
+              <tbody id="kbVerTbl">
+                <tr><td>原发性肝癌诊疗指南（2024 年版）.pdf</td><td class="num">12.8 MB</td><td class="num">1,046</td><td>v1.0</td><td class="num">2026-04-06 09:12</td><td class="num">首次入库</td></tr>
+                <tr><td>本院生物样本库 SOP.docx</td><td class="num">2.1 MB</td><td class="num">288</td><td>v3.2</td><td class="num">2026-03-18 15:40</td><td class="num">更新 6 处</td></tr>
+                <tr><td>TJ-TCM-2026 分析结论汇总.xlsx</td><td class="num">684 KB</td><td class="num">196</td><td>v1.4</td><td class="num">2026-08-12 11:05</td><td class="num">更新 22 行</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ 知识赋能 · 知识图谱（P2 · F-18） ═══════════
+         v58：同前两页，默认挂载外部 /kg 路径。 -->
+    <section class="page" data-proto-scope="page:kbgraph" data-proto-layer="0" id="page-kbgraph" aria-label="知识图谱" data-kbview="ext">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">知识赋能 · 知识图谱 · P2</div>
+          <h1 class="phead__h1">知识图谱</h1>
+        </div>
+        <div class="phead__side">
+          <div class="seg kbview__seg" role="group" aria-label="知识图谱内容来源">
+            <button type="button" class="seg__b" data-kbview="ext" aria-selected="true">外部系统</button>
+            <button type="button" class="seg__b" data-kbview="local" aria-selected="false">站内版本</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="kbframe" id="kbframe-kbgraph" data-kbframe="kbgraph">
+        <div class="kbframe__bar">
+          <span class="kbframe__lab">外部知识系统</span>
+          <span class="kbframe__url" data-kburl>—</span>
+          <span class="kbframe__acts">
+            <button type="button" class="btn btn--sm" data-kbreload>重新加载</button>
+            <a class="btn btn--sm" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <div class="kbframe__ph" data-kbph>正在加载外部知识系统…</div>
+        <div class="kbfail" data-kbfail hidden>
+          <span class="kbfail__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+          <span class="kbfail__t">外部知识系统暂不可达</span>
+          <span class="kbfail__d">该地址在内网中提供，当前网络可能未接入。确认已连到内网后可重新加载，或在新标签页直接打开。</span>
+          <span class="kbfail__addr" data-kbfailaddr>—</span>
+          <span class="kbfail__acts">
+            <button type="button" class="btn btn--primary" data-kbreload>重新加载</button>
+            <a class="btn" data-kbframeopen target="_blank" rel="noopener noreferrer">新标签打开</a>
+          </span>
+        </div>
+        <iframe class="kbframe__el" data-kbframeel title="知识图谱（外部知识系统）"
+                data-proto-scope="page:kbgraph" data-proto-layer="1" referrerpolicy="no-referrer"></iframe>
+      </div>
+
+      <div data-kblocal>
+      <div class="side mb-4">
+        <div class="card">
+          <div class="card__hd">
+            <span class="card__t">知识图谱 · 以样本为核心节点</span>
+            <span class="tag tag--brand">14 个实体 · 14 条关系</span>
+            <span class="tag tag--hint ml-auto">点节点查看关联</span>
+          </div>
+          <div class="card__bd">
+            <div class="chartbox" id="kbGraph" data-chart="graphnet"></div>
+            <div class="hr"></div>
+            <div class="row">
+              <span class="text-[12.5px] text-ink2">重建图谱</span>
+              <button class="switch" id="graphBuild" role="switch" aria-checked="false" aria-label="按最新知识重建图谱"></button>
+              <span class="text-[12px] text-ink3">按最新入库的知识重算实体关系</span>
+            </div>
+            <div class="mt-3" id="nodeSteps">
+              <div class="qrow"><span class="qpos">1</span><div class="flex-1">文献解析</div><span class="tag" data-ns>等待中</span></div>
+              <div class="qrow"><span class="qpos">2</span><div class="flex-1">实体识别</div><span class="tag" data-ns>等待中</span></div>
+              <div class="qrow"><span class="qpos">3</span><div class="flex-1">关系抽取</div><span class="tag" data-ns>等待中</span></div>
+              <div class="qrow"><span class="qpos">4</span><div class="flex-1">一致性校验</div><span class="tag" data-ns>等待中</span></div>
+              <div class="qrow"><span class="qpos">5</span><div class="flex-1">图嵌入</div><span class="tag" data-ns>等待中</span></div>
+              <div class="qrow"><span class="qpos">6</span><div class="flex-1">索引生效</div><span class="tag" data-ns>等待中</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__hd"><span class="card__t">实体检索与关联分析</span></div>
+          <div class="card__bd" id="kbPanel"></div>
+        </div>
+      </div>
+      </div><!-- /data-kblocal -->
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         项目管理（对齐原系统「项目管理」）
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:proj" data-proto-layer="0" id="page-proj" aria-label="项目管理">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">PROJECTS</div>
+          <h1 class="phead__h1">项目管理</h1>
+          <p class="phead__meta"><span id="projCount">共 13 个项目</span><span id="projCur">当前：—</span></p>
+        </div>
+        <div class="phead__side">
+          <!-- 卡片 / 列表是同一批项目的两种呈现，不是两套数据：
+               卡片用来「读描述」，列表用来「横向对比」（负责人、可见范围、更新时间排成列好扫）。 -->
+          <div class="seg seg--sm" id="projViewSeg" role="tablist" aria-label="项目展示方式">
+            <button type="button" class="seg__b is-on" role="tab" data-projview="card" aria-selected="true"><i class="fa-solid fa-grip ico"></i>卡片</button>
+            <button type="button" class="seg__b" role="tab" data-projview="list" aria-selected="false"><i class="fa-solid fa-list ico"></i>列表</button>
+          </div>
+          <button class="btn btn--sm" data-soon="项目列表刷新"><i class="fa-solid fa-rotate ico"></i>刷新</button>
+          <button class="btn btn--sm" data-proj-share><i class="fa-solid fa-share-nodes ico"></i>分享项目</button>
+          <button class="btn btn--sm btn--primary" data-proj-new><i class="fa-solid fa-plus ico"></i>新建项目</button>
+        </div>
+      </div>
+      <!-- class 由 renderProj() 按视图重设：卡片态 grid2 / 列表态 card。
+           不 toggle 而是整体重写，避免两次切换后残留上一个视图的类。 -->
+      <div class="grid2" id="projGrid"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         项目概况（v39：项目详情由右侧抽屉升为独立页面）
+         ⚠ 它**不在左栏菜单里**：从项目列表点「详情 / 查看」钻进来，
+           返回走面包屑的「项目管理」段（工作台 › 项目管理 › 项目概况）。
+         页头右上那排角标 = 这个项目有多少东西、跑到哪一步（数字全部现算）；
+         六个页签 = 项目的六个切面，内容由 renderProjPanel() 现算后写进 #projBody。
+         页签条与面板都由 JS 按 PDTABS 现渲染 —— 两处各写一份必然分叉。
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:projdetail" data-proto-layer="0" id="page-projdetail" aria-label="项目概况">
+      <div class="phead">
+        <div>
+          <div class="phead__eye" id="projEye">PROJECT OVERVIEW</div>
+          <h1 class="phead__h1" id="projH1">项目概况</h1>
+          <p class="phead__meta">
+            <span class="tag" id="projTag">—</span>
+            <span class="phead__nm" id="projName">—</span>
+            <span id="projSub">—</span>
+          </p>
+        </div>
+        <div class="phead__side">
+          <div class="pjbadges" id="projBadges"></div>
+        </div>
+      </div>
+
+      <div class="pd__act mb-4" id="projActs"></div>
+      <!-- 页签条与横向流程条共用一个位置，但不同时出现（见 renderProjTabs）：
+           信息 / 执行两栏下它是页签；分析结果下它换成流程条，回答的是
+           「我在整条分析线的第几步、前后各是什么」—— 页签回答不了这个问题。 -->
+      <div class="ptabs" role="tablist" aria-label="项目概况页签" id="projTabs"></div>
+      <div class="psteps" role="list" aria-label="分析结果模块" id="projSteps" hidden></div>
+      <div id="projBody"></div>
+      <!-- v44：页尾那条「查看组学分析流程与参数说明」（data-go="kbmed"）已撤。
+           它原本对齐参考系统的「云平台材料方法和结果查看指南」，但那是**项目页**，
+           而组学流程与参数说明是**分析**层面的读物 —— 挂在项目概况页尾等于
+           在错误的层级给了一条通用阅读入口。医学知识库在左栏本来就有独立一格，
+           要看从那里去（左栏 › 知识赋能 › 医学知识库）。 -->
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         样本管理（对齐原系统「样本」）
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:sample" data-proto-layer="0" id="page-sample" aria-label="样本管理">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">SAMPLES</div>
+          <h1 class="phead__h1">样本管理</h1>
+        </div>
+        <div class="phead__side">
+          <span class="tag tag--brand" id="sampleProjTag">项目：—</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__hd">
+          <span class="card__t">样本管理</span>
+          <span class="card__d" id="sampleCount">—</span>
+          <div class="toolbar__e row">
+            <button class="btn btn--sm" data-soon="样本列表刷新"><i class="fa-solid fa-rotate ico"></i>刷新</button>
+            <button class="btn btn--sm" data-soon="从样本构建集合"><i class="fa-solid fa-layer-group ico"></i>从样本构建集合</button>
+            <button class="btn btn--sm" data-soon="复制到项目"><i class="fa-solid fa-copy ico"></i>复制到项目</button>
+            <button class="btn btn--sm btn--primary" data-soon="新增样本"><i class="fa-solid fa-plus ico"></i>新增样本</button>
+          </div>
+        </div>
+        <div class="card__bd">
+          <div class="tblwrap">
+            <table class="tbl">
+              <thead><tr><th>#</th><th>样本名</th><th>类型</th><th>路径（测序 = R1 / 质谱 = 单文件）</th><th>R2 路径</th><th>分组</th><th>备注</th><th>操作</th></tr></thead>
+              <tbody id="sampleBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- v40：数据集不再是一个独立页面。
+         它是分析项目跑出来（或读进去）的东西，脱离项目就回答不了「为什么有它」，
+         所以收进「项目概况 › 数据集」页签；左栏这一格随之撤销，避免出现
+         「两处都能替数据集改名、改完互不同步」的情况。 -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         运行日志（对齐原系统「日志」）
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:log" data-proto-layer="0" id="page-log" aria-label="运行日志">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">AUDIT LOG</div>
+          <h1 class="phead__h1">运行日志</h1>
+        </div>
+        <div class="phead__side">
+          <span class="tag" id="logScope">全员视图</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__bd">
+          <div class="filtbar">
+            <div class="fld"><label class="fld__l" for="logType">类型</label><select class="sel" id="logType"><option>全部类型</option><option>工具执行</option><option>流程运行</option><option>数据上传</option></select></div>
+            <div class="fld"><label class="fld__l" for="logState">状态</label><select class="sel" id="logState"><option>全部状态</option><option>成功</option><option>运行中</option><option>失败</option></select></div>
+            <div class="fld"><label class="fld__l" for="logUser">用户</label><input class="inp" id="logUser" placeholder="按用户名筛选"></div>
+            <div class="fld"><label class="fld__l" for="logUid">用户 ID</label><input class="inp" id="logUid" placeholder="用户 ID"></div>
+            <div class="fld"><label class="fld__l" for="logPid">项目 ID</label><input class="inp" id="logPid" placeholder="项目 ID"></div>
+            <!-- v49：两个日期字段包成一组 —— 它们是**同一个区间**的两个端点，
+                 折行时被拆到两行（起始在上面一行、结束在下面一行）读起来就断了。
+                 见 app.css 的 `#page-log .filtbar__dates`。 -->
+            <div class="filtbar__dates">
+              <div class="fld"><label class="fld__l" for="logD1">起始日期</label><input class="inp" id="logD1" type="date" value="2026-09-01"></div>
+              <div class="fld"><label class="fld__l" for="logD2">结束日期</label><input class="inp" id="logD2" type="date" value="2026-09-20"></div>
+            </div>
+            <div class="filtbar__act">
+              <button class="btn btn--sm btn--primary" data-logq><i class="fa-solid fa-magnifying-glass ico"></i>查询</button>
+              <button class="btn btn--sm" data-logreset>重置</button>
+              <button class="btn btn--sm" data-soon="运行日志刷新">刷新</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <div class="card__hd">
+          <span class="card__t">日志记录</span>
+          <span class="card__d" id="logTotal">—</span>
+        </div>
+        <div class="card__bd">
+          <div class="tblwrap">
+            <table class="tbl">
+              <thead><tr><th>时间</th><th>用户</th><th>类型</th><th>状态</th><th>项目</th><th>内容</th></tr></thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
+          <div class="row justify-between mt-4">
+            <span class="text-[12px] text-ink3" id="logPageInfo">—</span>
+            <div class="row">
+              <button class="btn btn--sm" data-soon="运行日志翻页">上一页</button>
+              <button class="btn btn--sm" data-soon="运行日志翻页">下一页</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         系统管理 · 内置示例数据集设置（v40 需求 2）
+         这一页回答的不是一个新功能，而是「那些 Demo 里自带的数据谁能改」：
+         是否显示控制它在工作台 / 数据汇集页露不露面，简介是卡片上那一句
+         「为什么值得用它」，封面 good-pick 时能省掉一次点进去确认。
+         三条都即时生效并同步重绘前台 —— 设置页最大的谎言就是改完看不见。
+         逐条自带初始快照，「恢复默认」才有个可回到的地方。
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:pubds" data-proto-layer="0" id="page-pubds" aria-label="示例数据集">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">DEMO SETTINGS</div>
+          <h1 class="phead__h1">示例数据集</h1>
+          <p class="phead__meta"><span id="pubdsCount">—</span><span id="pubdsCur">共 9 条</span></p>
+        </div>
+        <div class="phead__side">
+          <span class="tag" id="pubdsWho">当前身份：超级管理员</span>
+          <span class="tag" id="pubdsHidden">—</span>
+          <button class="btn btn--sm" data-pds-all="1"><i class="fa-solid fa-eye ico"></i>全部显示</button>
+          <button class="btn btn--sm" data-pds-all="0"><i class="fa-solid fa-eye-slash ico"></i>全部隐藏</button>
+          <button class="btn btn--sm btn--primary" data-pds-reset><i class="fa-solid fa-rotate-left ico"></i>恢复默认</button>
+        </div>
+      </div>
+
+      <!-- v54 权限说明：示例数据集是**平台级展示配置**，只有超级管理员能改；
+           普通管理员与普通用户进来看得到现状、改不动（控件 disabled + 原因）。
+           与「隐藏按钮」相比，这样人能知道「有这件事、该找谁」。 -->
+      <div class="alert alert--warn mb-3" id="pubdsPerm" hidden>
+        <span class="alert__ico"><i class="fa-solid fa-triangle-exclamation ico"></i></span>
+        <div class="alert__bd">
+          <div class="alert__t">当前身份为「<span id="pubdsPermRole">普通用户</span>」：本页只读</div>
+          <p class="alert__p">示例数据集的显示、简介与封面属于平台级配置，仅「超级管理员」可修改。可在顶栏「当前用户」处切换角色。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__hd">
+          <span class="card__t">设置影响的位置</span>
+          <span class="card__d">工作台 › 内置示例数据集 · 数据汇集页 › 公开数据集</span>
+        </div>
+        <div class="card__bd">
+          <p class="text-[12.5px] text-ink3 mb-0">三条设置都会立刻作用到上面两个位置，不需要发布或刷新页面。
+            隐藏只影响展示 —— 数据集仍在库中，曾引用它的历史任务不受影响。</p>
+        </div>
+      </div>
+
+      <div class="stack mt-4" id="pubdsList"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         系统管理 · 项目组管理（v47 需求 3）
+         这一页回答的是「新建项目时那个『所属项目组』下拉里的名字从哪来、
+         谁在管」。在此之前它是三处写死的名单（见 app.js PROJ_GROUPS 注释），
+         系统里没有任何地方能看全、能改。
+         增删改**只有管理员能做**（v54 角色口径：超级管理员 / 普通管理员）。
+         v54 把页头那个三档身份开关撤了 —— 全站只留一处身份入口（顶栏当前
+         用户），这里退化成**只读徽标**：告诉人「我现在是谁」，能力说明在页脚。
+         两个入口并存时，改了一个另一个不同步，是最容易出的错。
+    ═══════════════════════════════════════════════════════════ -->
+    <section class="page" data-proto-scope="page:projgroup" data-proto-layer="0" id="page-projgroup" aria-label="项目组管理">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">PROJECT GROUPS</div>
+          <h1 class="phead__h1">项目组管理</h1>
+          <p class="phead__meta"><span id="pgCount">—</span><span id="pgOn">—</span></p>
+        </div>
+        <div class="phead__side">
+          <span class="tag" id="pgWho">当前身份：超级管理员</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__hd">
+          <button type="button" class="btn btn--sm btn--primary" data-pg-new>
+            <i class="fa-solid fa-plus ico"></i>创建项目组</button>
+          <button type="button" class="btn btn--sm" id="pgDel" data-pg-del aria-disabled="true">
+            <i class="fa-solid fa-trash-can ico"></i>删除</button>
+          <span class="tag" id="pgSel">未选择</span>
+          <div class="pgtools ml-auto">
+            <input class="inp inp--sm" id="pgQ" autocomplete="off" placeholder="搜索项目组名称 / 成员"
+                   aria-label="搜索项目组">
+            <button type="button" class="iconbtn" data-pg-refresh aria-label="刷新列表">
+              <i class="fa-solid fa-rotate ico"></i></button>
+          </div>
+        </div>
+        <div class="card__bd">
+          <p class="text-[12.5px] text-ink3 mb-0">
+            只有「<b>已通过</b> 且 <b>启用</b>」的项目组才会出现在新建项目的「所属项目组」下拉里；
+            状态由审核决定，本页不能修改。删除只对「已驳回」的项目组开放（待审核的可能马上通过、
+            已通过的已被项目引用，删了会让归属悬空）。</p>
+        </div>
+        <div class="card__bd pt-0">
+          <div class="tblwrap">
+            <table class="tbl pgtbl">
+              <thead>
+                <tr>
+                  <th class="wid"><input type="checkbox" id="pgAll" aria-label="全选"></th>
+                  <th>项目组名称</th>
+                  <th>项目组成员</th>
+                  <th class="num">人员数量</th>
+                  <th>项目组状态</th>
+                  <th class="num">创建时间 <span class="pgsort" id="pgSortBtn"></span></th>
+                  <th>状态</th>
+                  <th>创建人</th>
+                  <th class="wid">操作</th>
+                </tr>
+              </thead>
+              <tbody id="pgBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card__ft">
+          <span class="text-[12px] text-ink3" id="pgFoot">—</span>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card__hd"><span class="card__t">这个名单被谁读</span></div>
+        <div class="card__bd">
+          <div class="stack text-[12.5px] text-ink2">
+            <div class="row justify-between"><span>新建项目 › 第 1 步「所属项目组」</span>
+              <span class="text-ink3">只列 已通过 + 启用</span></div>
+            <div class="row justify-between"><span>文件管理 › 团队文件 › 上传时的「所属项目组」</span>
+              <span class="text-ink3">同一份口径，同一份名单</span></div>
+            <div class="row justify-between"><span>项目记录上的项目组标签</span>
+              <span class="text-ink3">建档时记下，之后改名单不影响历史项目</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    </main>
+  </div>
+
+  </div><!-- /.shell -->
+</div>
+
+<!-- ═══════════ 运行历史抽屉（按需展开，不再常驻占宽） ═══════════ -->
+<div class="back" id="backHist" hidden></div>
+<aside class="hist hist--drawer" data-proto-portal data-proto-scope="drawer:hist" data-proto-layer="20" id="histDrawer" hidden aria-label="运行历史">
+  <div class="hist__hd">
+    <i class="fa-solid fa-clock-rotate-left ico"></i>运行历史
+    <span class="hist__sel" id="histProj">· 全部项目</span>
+    <button class="iconbtn ml-auto" data-hist-refresh aria-label="刷新运行历史"><i class="fa-solid fa-rotate ico"></i></button>
+    <button class="iconbtn" data-close="hist" aria-label="关闭运行历史"><i class="fa-solid fa-xmark ico"></i></button>
+  </div>
+  <div class="hist__bd" id="histBody"></div>
+  <div class="hist__ft" id="histFoot">共 0 条记录</div>
+</aside>
+
+<!-- ═══════════ 工具配置抽屉（从「工具库」点工具打开） ═══════════ -->
+<div class="back" id="backTool" hidden></div>
+<aside class="drawer drawer--wide" data-proto-portal data-proto-scope="drawer:tool" data-proto-layer="20" id="drawerTool" hidden aria-label="工具配置">
+  <div class="drawer__hd">
+    <span class="drawer__t" id="toolT">工具配置</span>
+    <span class="tag" id="toolTag">SINGLE_TOOL</span>
+    <button class="iconbtn ml-auto" data-close="tool" aria-label="关闭"><i class="fa-solid fa-xmark ico"></i></button>
+  </div>
+  <div class="drawer__bd" id="toolBody"></div>
+</aside>
+
+<!-- ═══════════ G-04 运行详情抽屉（可追溯链路） ═══════════ -->
+<div class="back" id="backTrace" hidden></div>
+<aside class="drawer" data-proto-portal data-proto-scope="drawer:trace" data-proto-layer="20" id="drawerTrace" hidden aria-label="运行详情">
+  <div class="drawer__hd">
+    <span class="drawer__t">运行详情</span>
+    <span class="tag">T-2409-018</span>
+    <button class="iconbtn ml-auto" data-close="trace" aria-label="关闭"><i class="fa-solid fa-xmark ico"></i></button>
+  </div>
+  <div class="drawer__bd">
+    <div class="stack">
+      <div>
+        <div class="card__t mb-2">数据版本</div>
+        <div class="tblwrap">
+          <table class="tbl">
+            <tbody>
+              <tr><td>数据集</td><td class="num">TJ-TCM-2026</td></tr>
+              <tr><td>版本</td><td class="num">v2.1</td></tr>
+              <tr><td>对齐表哈希</td><td class="num text-[11.5px]">9f3c1a7e…d84b</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card__t mb-2">参数快照</div>
+        <div class="tblwrap">
+          <table class="tbl">
+            <tbody>
+              <tr><td>参考基因组</td><td class="num">GRCh38.p14</td></tr>
+              <tr><td>比对工具</td><td class="num">HISAT2 2.2.1</td></tr>
+              <tr><td>|log2FC| 阈值</td><td class="num">1.0</td></tr>
+              <tr><td>padj 阈值</td><td class="num">0.05</td></tr>
+              <tr><td>多重检验校正</td><td class="num">Benjamini-Hochberg</td></tr>
+              <tr><td>线程 / 内存</td><td class="num">12 核 / 48 GB</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="card__t mb-2">中间产物</div>
+        <div class="tblwrap">
+          <table class="tbl">
+            <thead><tr><th>文件</th><th>校验值</th></tr></thead>
+            <tbody>
+              <tr><td class="text-[12px]">counts.tsv</td><td class="num text-[11.5px]">a41f…9c02</td></tr>
+              <tr><td class="text-[12px]">deseq2_result.tsv</td><td class="num text-[11.5px]">77b0…31de</td></tr>
+              <tr><td class="text-[12px]">volcano.svg</td><td class="num text-[11.5px]">e0c5…7a19</td></tr>
+              <tr><td class="text-[12px]">heatmap.svg</td><td class="num text-[11.5px]">3d92…b46f</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--block" data-toast="已基于同一参数快照提交重跑，任务编号 T-2409-022"><i class="fa-solid fa-rotate-right ico"></i>基于同一快照重跑</button>
+      <button class="btn btn--block" data-dl="trace"><i class="fa-solid fa-download ico"></i>导出溯源报告</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════ 项目详情（v39 起改为独立页面）═══════════
+     v36 及以前：项目详情是右侧的 `#drawerProj` 抽屉（配 `#backProj` 遮罩），
+     理由是「就地看一眼，看完回到卡片流继续挑」。
+     v39 用户要求改成一张独立页面（对齐参考系统的「项目概况」），于是：
+       抽屉与遮罩整块删掉，新页面见 #page-projdetail（紧跟在项目管理页之后）。
+     为什么必须删干净而不是留着 hidden：DL / 渲染 / 断言里只要还有一处引用它，
+     就会出现「点得到但看不见」的幽灵浮层；这类残留查起来最费时间。
+     —— v46 撤「基因档案」时同一条理由又用了一次，见下。 -->
+
+<!-- v46：撤掉了「重建档案」抽屉（#drawerGene + #backGene 遮罩，原为
+     配置 → 执行 → 结果 三态的宽抽屉，配 .drawer--wide）。
+     它只服务于「基因档案」这一个页面块，tab 一撤它就没有任何入口了 ——
+     按上一条的规矩整块删，不留 hidden 的幽灵浮层。 -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     样本详情抽屉：样本列表留在页面上负责「挑哪一例」，这一例的
+     指标 / 信息 / 血缘 / 跨组学 / 资料整体搬到右侧滑出。
+     刻意**不带 .back 遮罩** —— 档案的用法是边翻边看：加了遮罩就必须
+     先关抽屉才能换下一例。现在点列表里另一行，抽屉内容原地切换。
+     为了让列表不被压在下面，抽屉打开时主内容区右内缩（body.is-sampdrawer），
+     而不是盖住它；Esc / 关闭按钮 / 切 tab / 跳页都会收起。
+═══════════════════════════════════════════════════════════ -->
+<aside class="drawer drawer--samp" data-proto-portal data-proto-scope="drawer:samp" data-proto-layer="20" id="drawerSamp" hidden aria-label="样本详情">
+  <div class="drawer__hd">
+    <span class="drawer__t">样本详情</span>
+    <span class="tag tag--brand" id="sampDrawerId">—</span>
+    <span class="drawer__sub" id="sampDrawerSub">—</span>
+    <button class="iconbtn ml-auto" data-close="samp" aria-label="关闭样本详情"><i class="fa-solid fa-xmark ico"></i></button>
+  </div>
+  <div class="drawer__bd" id="sampDrawerBody">
+
+        <!-- ① 选中样本的四个指标。HTML 留空、由 renderSampKpis() 现算 ——
+               写死的话，换个样本就会看到上一个样本的数字。 -->
+        <div class="mrow" id="sampKpis"></div>
+
+        <!-- ② 样本信息。字段全部由 renderSampInfo() 现算：既有的顶层字段（受试者
+               编号 / 采集物 / 采集时间 / 存放条件）、派生的分装数与所属项目、以及
+               meta 里的临床 / 存储 / 质控 / 知情同意，先并到一处再分组。
+               信息与资料是本页的两个落点：这张卡回答「这个样本是什么」，
+               底部的资料卡回答「原件与凭据在哪」。 -->
+        <div class="card" id="sampInfoCard">
+          <div class="card__hd">
+            <span class="card__t">样本信息</span>
+            <span class="card__d" id="sampInfoMeta">—</span>
+            <button type="button" class="btn btn--sm ml-auto" data-samp-edit><i class="fa-solid fa-pen-to-square ico"></i>编辑信息</button>
+          </div>
+          <div class="card__bd" id="sampInfo"></div>
+        </div>
+
+        <!-- ③ 血缘谱系。横向四列：队列个体 → 样本源 → 分装样本 → 衍生模型，
+               列名由数据现算（S068 多一层「原始登记 ID」，所以不能写死四个列名）。
+               点节点可以只筛出它贡献的组学记录 —— 血缘与跨组学是同一份数据的两个切面。
+               「节点列表」是这张图的数据表替代视图（与编排区画布同构）。 -->
+        <div class="card" id="linCard">
+          <div class="card__hd">
+            <span class="card__t">样本血缘谱系</span>
+            <span class="card__d" id="linMeta">—</span>
+            <div class="row gap-2 ml-auto">
+              <button type="button" class="btn btn--sm" data-lin-alt aria-expanded="false"><i class="fa-solid fa-table-list ico"></i>节点列表</button>
+              <!-- 排布方向切换：横向泳道（层级 = 列）⇄ 上下结构（层级 = 行）。
+                   文案由 syncLinAxis() 每次重写，写的是「点下去会变成什么」；
+                   内联图标只是首屏的初值，JS 一起步就会用 ico() 重画。 -->
+              <button type="button" class="btn btn--sm" id="linAxis" data-lin-axis
+                      title="切换为上下结构的血缘谱系"><i class="fa-solid fa-sitemap ico"></i><span id="linAxisT">上下结构</span></button>
+              <button type="button" class="cardfold" id="linFold" data-lin-fold
+                      aria-expanded="true" aria-controls="linBody"
+                      title="收起血缘谱系图">
+                <span id="linFoldT">收起</span><i class="fa-solid fa-chevron-down ico"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card__bd" id="linBody">
+            <div class="chartbox" id="linBox"></div>
+            <div class="tblwrap mt-3" id="linTbl" hidden></div>
+          </div>
+        </div>
+
+        <!-- ④ 跨组学关联。「查看数据」跳到该行所属项目的详情抽屉 ——
+               不新开页面，是因为项目详情里已经有这套样本与数据集的落点。 -->
+        <div class="card">
+          <div class="card__hd">
+            <span class="card__t">跨组学数据关联</span>
+            <span class="card__d" id="omMeta">—</span>
+            <button type="button" class="tag tag--brand ml-auto" id="omFilter"
+                    data-lin-clear hidden></button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap">
+              <!-- 这张表必须有 id：同一个面板里还有「样本资料」那张表，
+                   按 #sampPanel 数 thead th 会把两张一起数进去（7 变 14）。 -->
+              <table class="tbl" id="omTbl">
+                <thead><tr><th>组学</th><th>测序材料（血缘节点）</th><th>所属项目</th><th>产出文件</th><th>参考基因组</th><th class="num">产出时间</th><th class="wid">操作</th></tr></thead>
+                <tbody id="omBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑤ 样本资料。组学数据在系统里，资料原件在这里 —— 知情同意书、病理报告、
+               质检报告这些东西不参与分析，但它们是样本能否合规使用的凭据，所以照样
+               挂在同一个唯一 ID 下。条目由 renderSampDocs() 现算，不在这里写死。 -->
+        <div class="card" id="sampDocCard">
+          <div class="card__hd">
+            <span class="card__t">样本资料</span>
+            <span class="card__d" id="docMeta">—</span>
+            <button type="button" class="btn btn--sm btn--primary ml-auto" data-samp-doc-add><i class="fa-solid fa-folder-open ico"></i>归档资料</button>
+          </div>
+          <div class="card__bd pt-0">
+            <div class="tblwrap">
+              <table class="tbl" id="docTbl">
+                <!-- 列宽由 colgroup 定：7 列在 840px 抽屉里排得下，不能让浏览器按内容
+                     抢宽 —— 备注列被挤到 40px 时中文会一字一行，行高被撑到 110px+。
+                     「文件名」留 auto：窄屏先压缩它（省略号），其余列保持定宽。 -->
+                <colgroup>
+                  <col class="c-k"><col class="c-n"><col class="c-s"><col class="c-w">
+                  <col class="c-t"><col class="c-note"><col class="c-o">
+                </colgroup>
+                <thead><tr><th>资料类型</th><th>文件名</th><th class="num">大小</th><th>归档人</th><th class="num">归档时间</th><th>备注</th><th class="wid">操作</th></tr></thead>
+                <tbody id="docBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+  </div>
+</aside>
+
+
+<!-- ═══════════ 弹窗 ═══════════ -->
+<div class="modal" data-proto-portal data-proto-scope="modal:global" data-proto-layer="30" id="modal" hidden>
+  <div class="back" data-close="modal"></div>
+  <div class="modal__b" role="dialog" aria-modal="true" aria-labelledby="modalT">
+    <div class="modal__hd">
+      <span class="drawer__t" id="modalT">标题</span>
+      <button class="iconbtn ml-auto" data-close="modal" aria-label="关闭"><i class="fa-solid fa-xmark ico"></i></button>
+    </div>
+    <div class="modal__bd" id="modalB"></div>
+    <!-- 底栏由 showModal() 填充：纯说明类弹窗给「知道了」，表单类弹窗给「取消 / 提交」。
+         固定写死「知道了」的话，新建项目就没地方放提交按钮。 -->
+    <div class="modal__ft" id="modalF"><button class="btn btn--primary" data-close="modal">知道了</button></div>
+  </div>
+</div>
+
+<div class="toasts" data-proto-portal id="toasts" aria-live="polite"></div>
+
+<!-- 智能体浮窗（#agentWin + #agentFab 浮球）已整体撤除（v53）：
+     浮球是浮窗唯一的入口，留着窗就是留一个永远打不开的死面板。
+     会话唯一宿主 = 主页「问答交互」卡 #wbAgentCard（同一份 AGENT_LOG）。 -->
+
+<!--INJECT_JS-->
+</body>
+</html>

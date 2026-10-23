@@ -8960,7 +8960,7 @@ function agentConfirm(q) {
    手写 75 份只会让真正有内容的那 4 例淹没在重复里。 */
 var SAMP_FULL = {
   S037: {
-    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '示例',
+    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '自创建',
     mat: '肝组织 + 外周血', t: '2026-03-14', store: '液氮 / -80 ℃',
     /* meta / docs 只补**不能从别处派生**的东西。样本 ID、受试者编号、
        采集物、采集时间、存放条件仍是上面的顶层字段；分装与衍生数取自 lin、
@@ -9000,7 +9000,7 @@ var SAMP_FULL = {
     ]
   },
   S068: {
-    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌', src: '示例',
+    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌', src: '自创建',
     mat: '肝组织 + 外周血', t: '2026-03-19', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 63, stage: 'II 期', site: '肝左叶 S3 段',
@@ -9035,7 +9035,7 @@ var SAMP_FULL = {
     ]
   },
   S004: {
-    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌', src: '示例',
+    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌', src: '自创建',
     mat: '肝组织 + 外周血', t: '2026-03-11', store: '液氮 / -80 ℃',
     meta: {
       sex: '男', age: 55, stage: 'IIIb 期', site: '肝右叶 S7 段',
@@ -9068,7 +9068,7 @@ var SAMP_FULL = {
     ]
   },
   S052: {
-    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌', src: '示例',
+    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌', src: '自创建',
     mat: '肝组织 + 外周血', t: '2026-03-21', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 49, stage: 'IV 期', site: '肝右叶 + 门静脉癌栓',

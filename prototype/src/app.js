@@ -737,10 +737,15 @@ function renderChart(host) {
   }
   var id = 'ct' + (++chartSeq);
   var h = '';
+  /* v62：每张图右上角的「设置」入口 —— 打开右侧图表设置面板（尺寸/配色/网格/标题）。
+     面板与逻辑都由 CHART_CFG 驱动，不改各图自己的 draw()，也就不会把 14 张图的
+     坐标与数据重写一遍。 */
+  h += '<div class="chart-tools"><button type="button" class="chart-tool" data-chart-set="' + key
+    + '" title="图表设置" aria-label="图表设置">⚙ 设置</button></div>';
   /* title 同时兼职无障碍名（传给 wrap 的 aria-label）。多数图的卡片头是另一个
      说法（「染色体分布（曼哈顿图）」↔「曼哈顿图 · -log10(p)」），两者并存互补；
      但当卡片头与图名完全同名时（对齐矩阵）会重复，用 showTitle:false 只留无障碍名。 */
-  if (cfg.title && cfg.showTitle !== false) h += '<div class="text-[12px] text-ink3 mb-2">' + cfg.title + '</div>';
+  if (cfg.title && cfg.showTitle !== false) h += '<div class="chart-title text-[12px] text-ink3 mb-2">' + cfg.title + '</div>';
   h += wrap(r.w, r.h, cfg.title || key, r.inner, r.maxW);
   if (r.legend) {
     h += '<div class="chart__lg">' + r.legend.map(function (l) {
@@ -748,8 +753,10 @@ function renderChart(host) {
     }).join('') + '</div>';
   }
   if (r.table) {
-    h += '<div class="mt-3"><button class="chart-alt" data-alt="' + id + '">'
-      + ico('table-cells') + ' 查看数据表（无障碍替代视图）</button>';
+    h += '<div class="mt-3 chart-tbl-bar"><button class="chart-alt" data-alt="' + id + '">'
+      + ico('table-cells') + ' 查看数据表（无障碍替代视图）</button>'
+      + '<button class="chart-alt chart-dl" data-tbl-dl="' + id + '" data-tbl-name="' + key + '">'
+      + ico('download') + ' 下载表格</button>';
     h += '<div class="chart-tbl mt-3" id="' + id + '" hidden><div class="tblwrap"><table class="tbl"><thead><tr>'
       + r.table.head.map(function (k) { return '<th>' + k + '</th>'; }).join('')
       + '</tr></thead><tbody>'
@@ -760,6 +767,188 @@ function renderChart(host) {
       + (r.table.note || '完整数据请使用卡片右上角的「导出」按钮获取。') + '</p></div></div>';
   }
   host.innerHTML = h;
+  applyChartCfg(host);
+}
+
+/* ============================================================
+   v62 · 图表设置（每图一套，内存内保存）
+   ============================================================
+   需求：分析步骤里的图表要能设置/编辑。实现走「后处理 SVG」而不是给 14 个
+   draw() 各加一套参数 —— 图的绘制逻辑与配色都写死在 draw 里，逐图改等于把
+   坐标系重写一遍；而设置面板要调的（尺寸、背景、网格、点色、标题）都是
+   **已经画出来的元素**，在 DOM 上按「原始绘制色」做映射重着色就能通用覆盖。 */
+var CHART_CFG = {};
+var CHART_SET_HOST = null;
+
+function chartCfgOf(key) {
+  if (!CHART_CFG[key]) CHART_CFG[key] = {
+    wPct: 100, hPx: 0, bg: '', grid: 1, lineW: 1,
+    up: C.up, down: C.down, ns: C.ns,
+    legend: 1, title: '', titleSize: 12, titleColor: ''
+  };
+  return CHART_CFG[key];
+}
+
+function applyChartCfg(host) {
+  if (!host) return;
+  var key = host.getAttribute('data-chart'); if (!key) return;
+  var cf = chartCfgOf(key);
+  var svg = host.querySelector('svg.chart');
+  host.style.background = cf.bg || '';
+  if (svg) {
+    svg.style.width = cf.wPct ? cf.wPct + '%' : '';
+    svg.style.height = cf.hPx ? cf.hPx + 'px' : '';
+  }
+  var t = host.querySelector('.chart-title');
+  if (t) {
+    var def = (CHARTS[key] && CHARTS[key].title) || '';
+    t.textContent = cf.title || def;
+    t.style.fontSize = cf.titleSize + 'px';
+    t.style.color = cf.titleColor || '';
+  }
+  if (!svg) return;
+  /* 首个元素记下「原始色」，之后每次应用都从原始色重新映射 ——
+     否则改第二次时拿到的已经是上一次改过的色，再也回不去。 */
+  Array.prototype.slice.call(svg.querySelectorAll('circle,line')).forEach(function (el) {
+    if (!el.hasAttribute('data-oc')) {
+      el.setAttribute('data-oc', el.getAttribute('fill') || el.getAttribute('stroke') || '');
+    }
+    var oc = (el.getAttribute('data-oc') || '').toLowerCase();
+    var isFill = el.hasAttribute('fill');
+    var cur = el.getAttribute('data-oc');
+    if (oc === C.up.toLowerCase()) cur = cf.up;
+    else if (oc === C.down.toLowerCase()) cur = cf.down;
+    else if (oc === C.ns.toLowerCase()) cur = cf.ns;
+    el.setAttribute(isFill ? 'fill' : 'stroke', cur);
+    if (oc === C.grid.toLowerCase()) {
+      el.style.display = cf.grid ? '' : 'none';
+      if (!el.hasAttribute('data-ow')) el.setAttribute('data-ow', el.getAttribute('stroke-width') || '1');
+      el.setAttribute('stroke-width', cf.lineW || 1);
+    }
+  });
+  var lg = host.querySelector('.chart__lg');
+  if (lg) {
+    lg.hidden = !cf.legend;
+    Array.prototype.slice.call(lg.querySelectorAll('i')).forEach(function (i) {
+      if (!i.hasAttribute('data-oc')) i.setAttribute('data-oc', i.style.background || '');
+      var oc = (i.getAttribute('data-oc') || '').toLowerCase();
+      var cur = i.getAttribute('data-oc');
+      if (oc === C.up.toLowerCase()) cur = cf.up;
+      else if (oc === C.down.toLowerCase()) cur = cf.down;
+      else if (oc === C.ns.toLowerCase()) cur = cf.ns;
+      i.style.background = cur;
+    });
+  }
+}
+
+/* 右侧图表设置面板：JS 建一次，之后只切「当前作用于哪张图」。 */
+function ensureChartSetPanel() {
+  if ($('#chartSet')) return;
+  var h = '<aside class="chart-set" id="chartSet" aria-label="图表设置">'
+    + '<header class="chart-set__hd"><span class="chart-set__t">图表设置</span>'
+    + '<span class="chart-set__n" id="csName"></span>'
+    + '<button type="button" class="iconbtn" id="csClose" aria-label="关闭图表设置">' + ico('xmark') + '</button></header>'
+    + '<div class="chart-set__bd">'
+    + '<div class="chart-set__grp"><div class="chart-set__gt">尺寸</div>'
+    + '<label class="chart-set__row"><span>宽度</span><input type="number" id="csW" min="20" max="100" step="5" value="100"><i>%</i></label>'
+    + '<label class="chart-set__row"><span>高度</span><input type="number" id="csH" min="0" step="20" value="0"><i>px（0=自适应）</i></label>'
+    + '</div>'
+    + '<div class="chart-set__grp"><div class="chart-set__gt">外观</div>'
+    + '<label class="chart-set__row"><span>背景色</span><input type="color" id="csBg" value="#ffffff"></label>'
+    + '<label class="chart-set__row"><span>显示网格线</span><input type="checkbox" id="csGrid" checked></label>'
+    + '<label class="chart-set__row"><span>线条宽度</span><input type="number" id="csLineW" min="0.5" max="4" step="0.5" value="1"></label>'
+    + '<label class="chart-set__row"><span>显示图例</span><input type="checkbox" id="csLegend" checked></label>'
+    + '</div>'
+    + '<div class="chart-set__grp"><div class="chart-set__gt">颜色</div>'
+    + '<label class="chart-set__row"><span>上调</span><input type="color" id="csUp" value="' + C.up + '"></label>'
+    + '<label class="chart-set__row"><span>下调</span><input type="color" id="csDown" value="' + C.down + '"></label>'
+    + '<label class="chart-set__row"><span>点 / 未显著</span><input type="color" id="csNs" value="' + C.ns + '"></label>'
+    + '</div>'
+    + '<div class="chart-set__grp"><div class="chart-set__gt">主标题</div>'
+    + '<label class="chart-set__col"><span>标题文字（留空用默认）</span><input type="text" id="csTitle" placeholder="默认标题"></label>'
+    + '<label class="chart-set__row"><span>字号</span><input type="number" id="csTitleSize" min="8" max="28" value="12"></label>'
+    + '<label class="chart-set__row"><span>颜色</span><input type="color" id="csTitleColor" value="#7a8ca3"></label>'
+    + '</div>'
+    + '</div>'
+    + '<footer class="chart-set__ft"><button type="button" class="btn btn--sm" id="csReset">恢复默认</button>'
+    + '<button type="button" class="btn btn--sm btn--primary" id="csDone">完成</button></footer>'
+    + '</aside>';
+  document.body.insertAdjacentHTML('beforeend', h);
+  var box = $('#chartSet');
+  box.addEventListener('input', syncChartSet);
+  box.addEventListener('change', syncChartSet);
+  $('#csClose').addEventListener('click', closeChartSet);
+  $('#csDone').addEventListener('click', closeChartSet);
+  $('#csReset').addEventListener('click', function () {
+    if (!CHART_SET_HOST) return;
+    var key = CHART_SET_HOST.getAttribute('data-chart');
+    CHART_CFG[key] = null;
+    fillChartSet(); applyChartCfg(CHART_SET_HOST);
+  });
+}
+
+function fillChartSet() {
+  if (!CHART_SET_HOST) return;
+  var key = CHART_SET_HOST.getAttribute('data-chart');
+  var cf = chartCfgOf(key);
+  $('#csName').textContent = (CHARTS[key] && CHARTS[key].title) || key;
+  $('#csW').value = cf.wPct; $('#csH').value = cf.hPx;
+  $('#csBg').value = cf.bg || '#ffffff'; $('#csGrid').checked = !!cf.grid;
+  $('#csLineW').value = cf.lineW; $('#csLegend').checked = !!cf.legend;
+  $('#csUp').value = cf.up; $('#csDown').value = cf.down; $('#csNs').value = cf.ns;
+  $('#csTitle').value = cf.title || ''; $('#csTitleSize').value = cf.titleSize;
+  $('#csTitleColor').value = cf.titleColor || '#7a8ca3';
+}
+
+function syncChartSet() {
+  if (!CHART_SET_HOST) return;
+  var key = CHART_SET_HOST.getAttribute('data-chart');
+  var cf = chartCfgOf(key);
+  cf.wPct = Math.max(20, Math.min(100, Number($('#csW').value) || 100));
+  cf.hPx = Math.max(0, Number($('#csH').value) || 0);
+  cf.bg = $('#csBg').value === '#ffffff' ? '' : $('#csBg').value;
+  cf.grid = $('#csGrid').checked ? 1 : 0;
+  cf.lineW = Number($('#csLineW').value) || 1;
+  cf.legend = $('#csLegend').checked ? 1 : 0;
+  cf.up = $('#csUp').value; cf.down = $('#csDown').value; cf.ns = $('#csNs').value;
+  cf.title = $('#csTitle').value.trim();
+  cf.titleSize = Number($('#csTitleSize').value) || 12;
+  cf.titleColor = $('#csTitleColor').value === '#7a8ca3' ? '' : $('#csTitleColor').value;
+  applyChartCfg(CHART_SET_HOST);
+}
+
+function openChartSet(btn) {
+  ensureChartSetPanel();
+  var host = btn.closest('.chartbox');
+  if (!host) return;
+  CHART_SET_HOST = host;
+  fillChartSet();
+  $('#chartSet').classList.add('is-open');
+}
+function closeChartSet() {
+  var p = $('#chartSet'); if (p) p.classList.remove('is-open');
+  CHART_SET_HOST = null;
+}
+
+/* 表格下载：任意 <table> → TSV，走与其它下载一致的「确认框 → 落地文件」链路。 */
+function tblDownload(btn) {
+  var id = btn.getAttribute('data-tbl-dl');
+  var tbl = id ? document.getElementById(id)
+    : (btn.closest('.chartbox') ? btn.closest('.chartbox').querySelector('table') : null);
+  if (!tbl) { toast('这张表暂时没有可导出的数据', 'warn'); return; }
+  var rows = dlTableRows(tbl);
+  if (rows.length < 2) { toast('这张表暂时没有可导出的数据', 'warn'); return; }
+  var nm = (btn.getAttribute('data-tbl-name') || 'data_table');
+  var spec = {
+    name: dlSafeName(nm) + '.tsv', fmt: 'TSV',
+    src: '分析结果 › 图表数据表',
+    text: dlTsv(rows), lines: rows.length - 1,
+    note: rows[0].join(' / ') + ' · 共 ' + (rows.length - 1) + ' 行'
+  };
+  DL_PEND = spec;
+  showModal('下载确认', dlModalBody(spec),
+    '<button type="button" class="btn" data-close="modal">取消</button>'
+    + '<button type="button" class="btn btn--primary" data-dl-go="1">' + ico('download') + '确认下载</button>');
 }
 
 /* ============================================================
@@ -3689,6 +3878,9 @@ document.addEventListener('click', function (e) {
     if (box) box.hidden = !box.hidden;
     return;
   }
+  /* v62：图表设置面板 / 图表数据表下载 */
+  if ((t = e.target.closest('[data-chart-set]'))) { openChartSet(t); return; }
+  if ((t = e.target.closest('[data-tbl-dl]'))) { tblDownload(t); return; }
   /* 下载入口：先弹确认框，确认后才真的产出文件 */
   if ((t = e.target.closest('[data-dl]'))) { dlOpen(t.getAttribute('data-dl'), t); return; }
   if (e.target.closest('[data-dl-go]')) {
@@ -4599,6 +4791,9 @@ function closeDrawer() { $('#backTrace').hidden = true; $('#drawerTrace').hidden
 
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
+    /* v62：图表设置面板是最上层的浮层，先收它 */
+    var _cs = $('#chartSet');
+    if (_cs && _cs.classList.contains('is-open')) { closeChartSet(); return; }
     /* 主页问答卡全屏：Esc 先缩回原来那一格，而不是把这一整张卡「收掉」
        —— 卡片在页面流里，没有「收掉」这个动作，能做的只有缩回。 */
     var _wc = $('#wbAgentCard');

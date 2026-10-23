@@ -4065,9 +4065,6 @@ document.addEventListener('click', function (e) {
   if ((t = e.target.closest('[data-fmscope]'))) {
     FM_SCOPE = t.getAttribute('data-fmscope'); renderFM(); return;
   }
-  if ((t = e.target.closest('[data-fmup]'))) {
-    FM_UP = t.getAttribute('data-fmup'); renderFMUp(); return;
-  }
   if (e.target.closest('[data-fm-pick]')) {
     var fmf = $('#fmFile'); if (fmf) fmf.click(); return;
   }
@@ -8963,7 +8960,7 @@ function agentConfirm(q) {
    手写 75 份只会让真正有内容的那 4 例淹没在重复里。 */
 var SAMP_FULL = {
   S037: {
-    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌',
+    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '示例',
     mat: '肝组织 + 外周血', t: '2026-03-14', store: '液氮 / -80 ℃',
     /* meta / docs 只补**不能从别处派生**的东西。样本 ID、受试者编号、
        采集物、采集时间、存放条件仍是上面的顶层字段；分装与衍生数取自 lin、
@@ -9003,7 +9000,7 @@ var SAMP_FULL = {
     ]
   },
   S068: {
-    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌',
+    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌', src: '示例',
     mat: '肝组织 + 外周血', t: '2026-03-19', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 63, stage: 'II 期', site: '肝左叶 S3 段',
@@ -9038,7 +9035,7 @@ var SAMP_FULL = {
     ]
   },
   S004: {
-    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌',
+    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌', src: '示例',
     mat: '肝组织 + 外周血', t: '2026-03-11', store: '液氮 / -80 ℃',
     meta: {
       sex: '男', age: 55, stage: 'IIIb 期', site: '肝右叶 S7 段',
@@ -9071,7 +9068,7 @@ var SAMP_FULL = {
     ]
   },
   S052: {
-    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌',
+    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌', src: '示例',
     mat: '肝组织 + 外周血', t: '2026-03-21', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 49, stage: 'IV 期', site: '肝右叶 + 门静脉癌栓',
@@ -9208,7 +9205,7 @@ function genSamp(i) {
     f: 'protein_dia.mzTab', sz: (78 + r(40)) + ' MB', t: '2026-09-11 15:2' + r(9) });
 
   return {
-    cohort: 'TJ-TCM-2026', no: '第 ' + i + ' 例', subj: subj, dx: dx,
+    cohort: 'TJ-TCM-2026', no: '第 ' + i + ' 例', subj: subj, dx: dx, src: '系统',
     mat: '肝组织 + 外周血', t: t, store: '液氮 / -80 ℃',
     meta: { sex: sex, age: age, stage: stage, site: site, vol: vol,
             proc: '液氮速冻 · EDTA 抗凝', loc: loc, inAt: t + ' ' + hm,
@@ -9515,7 +9512,7 @@ function renderSampList() {
     return '<tr class="samptr' + (id === SAMP_CUR ? ' is-on' : '') + '" data-samp-pick="' + id + '">'
       + '<td class="nw"><button type="button" class="sampid" data-samp-pick="' + id + '">' + id + '</button></td>'
       + '<td class="nw num">' + esc(a.subj) + '</td>'
-      + '<td class="nw">' + esc(m.sex || '—') + ' / ' + (m.age == null ? '—' : m.age) + '</td>'
+      + '<td class="nw">' + esc(a.src || '系统') + '</td>'
       + '<td>' + esc(a.dx) + '</td>'
       + '<td class="nw">' + esc(m.stage || '—') + '</td>'
       + '<td class="nw num">' + esc(a.t) + '</td>'
@@ -10669,12 +10666,6 @@ function renderFM() {
 function renderFMUp() {
   var box = $('#fmUpBody'); if (!box) return;
   var hd = $('#fmUpCard .card__t'); if (hd) hd.textContent = FM_SCOPE === 'sys' ? '上传系统文件' : '上传文件';
-  /* v56：系统文件的 web / FTP 两种方式切到它自己的那一档，不能和别的范围串。 */
-  $$('#fmUpCard [data-fmup]').forEach(function (b) {
-    var on = b.getAttribute('data-fmup') === FM_UP;
-    b.classList.toggle('is-on', on);
-    b.setAttribute('aria-selected', on ? 'true' : 'false');
-  });
   /* v56：系统文件只读时不给上传区，改成一句话说清「谁才能传」——
      权限不足不隐藏信息、也不假装这个功能不存在。 */
   if (FM_SCOPE === 'sys' && !fmCanWrite()) {
@@ -10685,16 +10676,6 @@ function renderFMUp() {
       + '<p class="alert__p">' + esc(fmWriteWhy()) + '</p></div></div>'
       + '<p class="text-[12px] text-ink3 mt-3">系统文件是平台公共参考数据，全体用户都能查看与下载；'
       + '上传、修改、删除由「超级管理员」统一维护。</p>';
-    return;
-  }
-  if (FM_UP === 'ftp') {
-    box.innerHTML =
-      '<div class="fmloc"><span class="fmloc__k">主机</span><span class="fmloc__n">ftp.omic.internal : 2121</span><span class="tag">内网</span></div>'
-      + '<div class="fmloc mt-2"><span class="fmloc__k">目录</span><span class="fmloc__n">/upload/'
-      + esc(FM_SCOPE === 'sys' ? 'system' : FM_SCOPE === 'team' ? (FM_PJ_UPLOAD || '项目组') : 'personal') + '</span></div>'
-      + '<div class="fmloc mt-2"><span class="fmloc__k">账号</span><span class="fmloc__n">工号登录，密码同内网域账号</span></div>'
-      + '<p class="text-[12px] text-ink3 mt-3">FTP 适合大批量测序文件的后台直传，上传完成后会出现在对应位置的列表里。'
-      + '当前浏览器环境没有 FTP 客户端，请先用 web 上传。</p>';
     return;
   }
   var scope = FM_SCOPE;
@@ -10716,7 +10697,7 @@ function renderFMUp() {
     + '<input type="file" id="fmFile" data-fm-file multiple tabindex="-1" class="dzf">'
     + '<div class="dz__ico">' + ico('cloud-arrow-up') + '</div>'
     + '<div class="dz__t">拖拽文件到此处，或点击选择文件</div>'
-    + '<div class="dz__d">不限文件格式，可一次选多个；大文件建议走 FTP</div>'
+    + '<div class="dz__d">不限文件格式，可一次选多个</div>'
     + '</div>'
     + '<p class="text-[12px] text-ink3 mt-2">'
     + (scope === 'sys'

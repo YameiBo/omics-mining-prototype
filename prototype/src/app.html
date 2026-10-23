@@ -405,7 +405,7 @@
                 <thead><tr>
                   <th class="nw"><button type="button" class="thsort" data-samp-sort="id">样本 ID<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
                   <th class="nw">受试者</th>
-                  <th class="nw">性别 / 年龄</th>
+                  <th class="nw">数据来源</th>
                   <th>疾病</th>
                   <th class="nw">分期</th>
                   <th class="nw"><button type="button" class="thsort" data-samp-sort="t">采集日期<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
@@ -437,7 +437,7 @@
          数据资产 · 文件管理（v33：从样本档案第三个 tab 升为独立二级菜单页）
          三档可见范围就是权限模型：个人 = 仅本人；团队 = 按项目组共享、
          带上传人；系统 = 平台公共参考数据、**全体可读，仅超级管理员可写**。
-         上传不限格式（file input 不设 accept），web / FTP 两条路。
+         上传不限格式（file input 不设 accept）。
          v56：系统文件从「只读、整卡隐藏」改为「可上传，但按身份判权限」——
          左侧上传卡不再按范围整块隐藏，只读身份看到的是一段说明。
     ═══════════════════════════════════════════════════════════ -->
@@ -464,10 +464,6 @@
           <div class="card" id="fmUpCard">
             <div class="card__hd">
               <span class="card__t">上传文件</span>
-              <span class="seg" role="tablist" aria-label="上传方式">
-                <button class="seg__b is-on" data-fmup="web" role="tab" aria-selected="true">web 上传</button>
-                <button class="seg__b" data-fmup="ftp" role="tab" aria-selected="false">FTP 上传</button>
-              </span>
             </div>
             <div class="card__bd" id="fmUpBody"></div>
           </div>

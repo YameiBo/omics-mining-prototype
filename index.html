@@ -8810,8 +8810,7 @@ function projListHTML() {
   var rows = PROJECTS.map(function (p) {
     return '<tr data-proj="' + p.id + '" aria-current="' + (p.on ? 'true' : 'false') + '">'
       + '<td>' + p.id + '</td>'
-      + '<td><button type="button" class="projrow" data-proj-open="' + p.id + '">' + esc(p.n)
-      + (p.on ? '<span class="tag tag--brand">当前</span>' : '') + '</button></td>'
+      + '<td><button type="button" class="projrow" data-proj-open="' + p.id + '">' + esc(p.n) + '</button></td>'
       + '<td>' + esc(p.own) + '</td>'
       + '<td class="num">' + fmtNum(p.sm) + '</td>'
       + '<td class="num">' + p.rn + '</td>'

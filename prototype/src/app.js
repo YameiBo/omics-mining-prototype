@@ -6193,7 +6193,6 @@ function pdtInfoPanel(p, st) {
         ['项目编号', p.id],
         ['项目名称', esc(p.n)],
         ['负责人', esc(p.own)],
-        ['可见范围', esc(p.vis)],
         ['参考基因组', p.ref === '—' ? '不适用（不依赖参考基因组）' : esc(p.ref)],
         ['样本数量', fmtNum(p.sm) + ' ' + esc(p.u)],
         ['创建时间', p.created],

@@ -2655,7 +2655,7 @@ DRIVE = r"""
       navMarks: qa('#navBody [data-pdmod] .snav__n').length,   /* 每个模块一枚状态记号 */
       /* 全局菜单项在这层必须一个都不剩：留着就是「两套导航叠在一起」 */
       navGlobal: qa('#navBody [data-go]').length,              /* 期望 0 */
-      kv: qa('#pdt-info .tbl--kv tbody tr').length,     /* 期望 9 行键值 */
+      kv: qa('#pdt-info .tbl--kv tbody tr').length,     /* 期望 8 行键值 */
       /* v40：数据集不再在「项目信息」里铺一张表，而是自己占一个页签 ——
          这里断的是「信息屏只给计数与去处，明细在数据集页签」这件事。 */
       dsLink: qa('#pdt-info [data-pdt="dataset"]').length,   /* 期望 1 */
@@ -6510,8 +6510,8 @@ try:
          and 'pjbadge--ok' in pjD['badgeTone'][2]
          and 'pjbadge--' not in pjD['badgeTone'][3],
          (pjD['badges'], pjD['badgeTone']))
-    need('项目信息页签：9 行键值表（编号/名称/负责人/可见范围/参考基因组/样本数量/创建/更新/状态）',
-         pjD['kv'] == 9, pjD['kv'])
+    need('项目信息页签：8 行键值表（编号/名称/负责人/参考基因组/样本数量/创建/更新/状态）',
+         pjD['kv'] == 8, pjD['kv'])
     need('详情四指标一行不折行',     pjD['statN'] == 4 and pjD['statsRows'] == 1,
          '%s 格 / %s 行' % (pjD['statN'], pjD['statsRows']))
     need('详情指标=卡片摘要口径',    pjD['stats'][0].startswith('71') and pjD['stats'][1].startswith('9'),

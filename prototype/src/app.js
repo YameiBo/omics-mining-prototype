@@ -5716,7 +5716,7 @@ function projListHTML() {
     + '<span class="card__d">共 ' + PROJECTS.length + ' 个项目 · 列出负责人、规模与可见范围，便于横向比较</span></div>'
     + '<div class="card__bd"><div class="tblwrap"><table class="tbl">'
     + '<thead><tr><th>项目编号</th><th>项目名称</th><th>负责人</th>'
-    + '<th class="num">样本</th><th class="num">流程</th><th>可见范围</th><th>项目状态</th><th class="num">最近更新</th><th>操作</th></tr></thead>'
+    + '<th class="num">样本</th><th class="num">分析步骤</th><th>可见范围</th><th>项目状态</th><th class="num">最近更新</th><th>操作</th></tr></thead>'
     + '<tbody>' + rows + '</tbody></table></div></div>';
 }
 
@@ -6181,7 +6181,7 @@ function pdtInfoPanel(p, st) {
   return '<div class="stack">'
     /* 四个指标与卡片上那行摘要同源 */
     + '<div class="mrow">'
-    + '<div class="mcell"><div class="mcell__l">样本规模</div><div class="mcell__v">' + fmtNum(p.sm)
+    + '<div class="mcell"><div class="mcell__l">样本数量</div><div class="mcell__v">' + fmtNum(p.sm)
     + '<span class="mcell__u">' + esc(p.u) + '</span></div><div class="mcell__f">登记在样本管理</div></div>'
     + '<div class="mcell"><div class="mcell__l">分析流程</div><div class="mcell__v">' + p.rn
     + '<span class="mcell__u">条</span></div><div class="mcell__f">含模板与自定义</div></div>'
@@ -6194,20 +6194,17 @@ function pdtInfoPanel(p, st) {
     + pdtKV([
         ['项目编号', p.id],
         ['项目名称', esc(p.n)],
-        ['项目类别', esc(p.kind)],
-        ['物种', esc(p.sp)],
         ['负责人', esc(p.own)],
         ['可见范围', esc(p.vis)],
         ['参考基因组', p.ref === '—' ? '不适用（不依赖参考基因组）' : esc(p.ref)],
-        ['样品规模', fmtNum(p.sm) + ' ' + esc(p.u)],
+        ['样本数量', fmtNum(p.sm) + ' ' + esc(p.u)],
         ['创建时间', p.created],
         ['最近更新', p.t],
         ['项目状态', projStTag(p.st)]
       ])
     + '</div>'
     + '<div><div class="pd__sec">' + ico('align-left') + '项目描述</div>'
-    + '<p class="pbody">' + esc(p.d) + '</p>'
-    + '<div class="row mt-3">' + p.tags.map(function (x) { return '<span class="tag">' + esc(x) + '</span>'; }).join('') + '</div></div>'
+    + '<p class="pbody">' + esc(p.d) + '</p></div>'
     + '<div data-pdsec="ds"><div class="pd__sec">' + ico('database') + '关联数据集（' + st.ds.length + '）</div>'
     + '<div class="row"><span class="text-[12.5px] text-ink3">' + esc(dsLine) + '</span>'
     + '<button type="button" class="btn btn--sm" data-pdt="dataset">' + ico('arrow-right') + '去「数据集」页签</button>'

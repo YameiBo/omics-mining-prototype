@@ -8815,7 +8815,6 @@ function projListHTML() {
       + '<td>' + esc(p.own) + '</td>'
       + '<td class="num">' + fmtNum(p.sm) + '</td>'
       + '<td class="num">' + p.rn + '</td>'
-      + '<td>' + esc(p.vis) + '</td>'
       + '<td>' + projStTag(p.st) + '</td>'
       + '<td class="num nw">' + p.t.slice(0, 16) + '</td>'
       + '<td class="wid"><span class="ops">'
@@ -8823,10 +8822,10 @@ function projListHTML() {
       + '</span></td></tr>';
   }).join('');
   return '<div class="card__hd"><span class="card__t">项目列表</span>'
-    + '<span class="card__d">共 ' + PROJECTS.length + ' 个项目 · 列出负责人、规模与可见范围，便于横向比较</span></div>'
+    + '<span class="card__d">共 ' + PROJECTS.length + ' 个项目 · 列出负责人、样本与分析步骤，便于横向比较</span></div>'
     + '<div class="card__bd"><div class="tblwrap"><table class="tbl">'
     + '<thead><tr><th>项目编号</th><th>项目名称</th><th>负责人</th>'
-    + '<th class="num">样本</th><th class="num">分析步骤</th><th>可见范围</th><th>项目状态</th><th class="num">最近更新</th><th>操作</th></tr></thead>'
+    + '<th class="num">样本</th><th class="num">分析步骤</th><th>项目状态</th><th class="num">最近更新</th><th>操作</th></tr></thead>'
     + '<tbody>' + rows + '</tbody></table></div></div>';
 }
 

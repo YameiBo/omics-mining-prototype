@@ -2926,8 +2926,8 @@ DRIVE = r"""
        是 -1，那不是「列没了」，是「量错视图了」（本轮真实踩到）。 */
     q('#projViewSeg [data-projview="list"]').click(); await sleep(280);
     R.projStatus.listHead = qa('#projGrid table thead th').map(t => txt(t));
-    R.projStatus.listTh   = R.projStatus.listHead.indexOf('项目状态');    /* 期望 6 */
-    R.projStatus.listSt   = txt(q('#projGrid table tbody tr:first-child td:nth-child(7)'));
+    R.projStatus.listTh   = R.projStatus.listHead.indexOf('项目状态');    /* 期望 5 */
+    R.projStatus.listSt   = txt(q('#projGrid table tbody tr:first-child td:nth-child(6)'));
     R.projStatus.opsBtns  = (function () {
       const r = q('#projGrid table tbody tr'); if (!r) return -1;
       return r.querySelectorAll('td:last-child .btn').length;
@@ -6396,7 +6396,7 @@ try:
                                      and pj0['cur'].startswith('当前：'), (pj0['count'], pj0['cur']))
     need('卡片摘要=规模+流程',       '71 例共同样本 · 9 条流程' in pj0['meta'], pj0['meta'])
     need('列表视图 13 行 9 列（v37 加「项目状态」）',
-                                     pjL['rows'] == 13 and pjL['heads'] == 9 and pjL['cards'] == 0,
+                                     pjL['rows'] == 13 and pjL['heads'] == 8 and pjL['cards'] == 0,
          (pjL['rows'], pjL['heads'], pjL['cards']))
     need('列表视图铺满正文宽',       pjL['w'] >= pjL['vp'] * 0.75, '%s / %s' % (pjL['w'], pjL['vp']))
     # 操作列的「查看」：每行一个，且点了真的开详情抽屉。
@@ -6723,9 +6723,9 @@ try:
          all(s in ('成功', '分析中', '失败') for s in _pst['statuses']), _pst['statuses'])
     need('项目状态只有成功 / 分析中 / 失败三种取值',
          sorted(set(_pst['statuses'])) == ['分析中', '失败', '成功'], sorted(set(_pst['statuses'])))
-    need('列表视图「项目状态」列排在可见范围之后（第 7 列）',
-         _pst['listTh'] == 6 and _pst['listHead'][6] == '项目状态'
-         and len(_pst['listHead']) == 9, _pst['listHead'])
+    need('列表视图「项目状态」列排在分析步骤之后（第 6 列）',
+         _pst['listTh'] == 5 and _pst['listHead'][5] == '项目状态'
+         and len(_pst['listHead']) == 8, _pst['listHead'])
     need('列表视图行内真的填了状态值',
          _pst['listSt'] in ('成功', '分析中', '失败'), _pst['listSt'])
     need('列表操作列不再有「设为当前」，只剩查看',

@@ -7390,12 +7390,7 @@ function pnewStep2() {
     + ' placeholder="文件名称" value="' + esc(PNEW.fq || '') + '" aria-label="按文件名称筛选"></div>'
     + '<div class="pntree">' + pnewFileRows() + '</div>'
     + '</section>'
-    + '</div>'
-    + '<div class="fld mt-3"><label class="fld__l" for="pnSeq">' + reqMark() + '测序类型：</label>'
-    + '<select class="sel" id="pnSeq" aria-required="true">'
-    + ['单端测序', '双端测序'].map(function (s) {
-      return '<option' + (s === d.seq ? ' selected' : '') + '>' + s + '</option>';
-    }).join('') + '</select></div>';
+    + '</div>';
 }
 
 /* ---------- 步骤 3 · 分组与比较方案（v39 需求 2：两步合一） ---------- */
@@ -7731,7 +7726,6 @@ function pnewCheckStep0() {
 }
 function pnewCheckStep1() {
   if (!PNEW.d.files.length) return pnewMiss('数据文件（至少勾选 1 个）');
-  if (!PNEW.d.seq) return pnewMiss('测序类型');
   return true;
 }
 /* 第 3 步（分组与比较方案）的守卫：两件事都要齐 ——

@@ -3112,7 +3112,7 @@ DRIVE = r"""
       back:   qa('#modalF [data-pn="back"]').length,        /* 期望 1 */
       tabs:   qa('#modalB .pntab').map(txt),                /* 期望 个人/团队/系统 三个 */
       dirs:   qa('#modalB .pntree__dir').length,
-      seq:    qa('#modalB #pnSeq option').map(o => o.value),
+      hasSeq: !!q('#modalB #pnSeq'),
       selPane: txt(q('#modalB .pn2col__l .fld__l'))
     };
     /* 一个文件都不勾 → 下一步必须被拦 */
@@ -6810,10 +6810,10 @@ try:
     _w2 = _wz['s2']
     need('「下一步」真的推进到第 2 步，且第 1 步转为已完成态',
          _w2['idx'] == 1 and _w2['done'] == 1 and _w2['back'] == 1, _w2)
-    need('第 2 步是「已选择的文件 + 个人/团队/系统」两栏三页签',
+    need('第 2 步是「已选择的文件 + 个人/团队/系统」两栏三页签（无测序类型选项）',
          _w2['tabs'] == ['个人文件', '团队文件', '系统文件'] and _w2['dirs'] >= 1
          and '已选择的文件' in (_w2['selPane'] or '')
-         and _w2['seq'] == ['单端测序', '双端测序'], _w2)
+         and _w2['hasSeq'] is False, _w2)
     need('第 2 步不勾任何文件点「下一步」被拦下',
          '数据文件' in (_wz['s2guard'] or ''), _wz['s2guard'])
     _w2p = _wz['s2pick']

@@ -9125,6 +9125,7 @@ function agentConfirm(q) {
 var SAMP_FULL = {
   S037: {
     cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '手动登记',
+    sibs: [{ id: 'S037-P', s: '血浆样本 · 同一样本源' }],
     mat: '肝组织 + 外周血', t: '2026-03-14', store: '液氮 / -80 ℃',
     /* meta / docs 只补**不能从别处派生**的东西。样本 ID、样本源ID、
        采集物、采集时间、存放条件仍是上面的顶层字段；分装与衍生数取自 lin、
@@ -9845,12 +9846,17 @@ function linGeo(G, k) {
 var LIN_AXIS = 'col';
 
 function linCardSVG(n, p, a, G) {
-  var skin = LIN_SKIN[n.k] || LIN_SKIN.self;
+  var muted = !!n.muted;
+  var skin = muted
+    ? { top: '#C9D2DC', body: '#F4F6F9' }
+    : (LIN_SKIN[n.k] || LIN_SKIN.self);
   var on = LIN_FOCUS === n.id, cnt = linOm(a, n.id);
-  var stroke = on ? (skin.top || LINC.ink) : LINC.hair;
-  var out = '<g class="linnode' + (on ? ' is-on' : '') + '" data-linnode="' + esc(n.id) + '"'
-    + ' role="button" tabindex="0"'
-    + ' aria-label="' + esc(n.t + ' ' + n.s + '，' + (cnt ? cnt + ' 路组学' : '尚无组学数据') + '，点击筛选') + '">'
+  var stroke = muted ? '#D5DDE6' : (on ? (skin.top || LINC.ink) : LINC.hair);
+  var out = '<g class="linnode' + (muted ? ' is-muted' : '') + (on ? ' is-on' : '') + '"'
+    + (muted ? ''
+      : ' data-linnode="' + esc(n.id) + '" role="button" tabindex="0"'
+        + ' aria-label="' + esc(n.t + ' ' + n.s + '，' + (cnt ? cnt + ' 路组学' : '尚无组学数据') + '，点击筛选') + '"')
+    + '>'
     + rect(p.x, p.y, G.NW, G.NH, skin.body,
         ' class="lncard" rx="10" stroke="' + stroke + '" stroke-width="' + (on ? 2 : 1) + '"');
   if (skin.top) {
@@ -9860,9 +9866,9 @@ function linCardSVG(n, p, a, G) {
     out += '<g class="lnhead">'
       + rect(p.x, p.y, G.NW, G.BAR, skin.top, ' rx="10"')
       + rect(p.x, p.y + G.BAR - 12, G.NW, 12, skin.top, ' rx="0"')
-      + txt(p.x + 13, p.y + G.cT, esc(n.t), { fs: G.idFs, fill: '#FFFFFF', mono: true, w: 600 })
+      + txt(p.x + 13, p.y + G.cT, esc(n.t), { fs: G.idFs, fill: muted ? '#5D6B7A' : '#FFFFFF', mono: true, w: 600 })
       + '</g>';
-    out += txt(p.x + G.sX, p.y + G.cS, esc(n.s), { fs: G.subFs, fill: LINC.sub });
+    out += txt(p.x + G.sX, p.y + G.cS, esc(n.s), { fs: G.subFs, fill: muted ? '#8A97A6' : LINC.sub });
   } else {
     /* 队列个体卡没有顶栏：整卡浅蓝底 + 图标 + 蓝色标题（参照图的两版都是这样）。
        图标名必须是 ICON_REGISTRY 里真实存在的键 —— build 只收集 ico() 调用与
@@ -9875,11 +9881,13 @@ function linCardSVG(n, p, a, G) {
   /* 右上角徽标：这个节点贡献了几路组学。0 也照画 ——「已分装但未送测」是有信息量
      的状态，与「数据丢了」是两回事；参照图里 0 同样是白底圆，跟着它走。
      单独挂 data-linbadge：纵向版还会画分叉点小圆，探针数 circle 会被它带偏。 */
-  out += '<circle data-linbadge="1" cx="' + (p.x + G.NW - G.bX) + '" cy="' + (p.y + G.bY) + '"'
-    + ' r="' + G.bR + '" fill="#FFFFFF"/>'
-    + txt(p.x + G.NW - G.bX, p.y + G.bY + 3.5, String(cnt),
-          { fs: G.bR + 0.5, fill: LINC.badge, anchor: 'middle', w: 600 })
-    + '</g>';
+  if (!muted) {
+    out += '<circle data-linbadge="1" cx="' + (p.x + G.NW - G.bX) + '" cy="' + (p.y + G.bY) + '"'
+      + ' r="' + G.bR + '" fill="#FFFFFF"/>'
+      + txt(p.x + G.NW - G.bX, p.y + G.bY + 3.5, String(cnt),
+            { fs: G.bR + 0.5, fill: LINC.badge, anchor: 'middle', w: 600 });
+  }
+  out += '</g>';
   return out;
 }
 
@@ -9935,8 +9943,8 @@ function lineageCols(a) {
     out += '<path d="' + (Math.abs(y1 - y2) < 0.6
         ? 'M' + x1 + ' ' + y1 + ' H' + x2
         : 'M' + x1 + ' ' + y1 + ' H' + fx + ' V' + y2 + ' H' + x2)
-      + '" fill="none" stroke="' + LINC.line + '" stroke-width="1.5" marker-end="url(#linArrow)"/>';
-    if (n.via) {
+      + '" fill="none" stroke="' + (n.muted ? '#DCE3EB' : LINC.line) + '" stroke-width="1.5" marker-end="url(#linArrow)"/>';
+    if (n.via && !n.muted) {
       /* 标签落在**最后一段水平线**的上方：同 y 时是整条线的中点，
          分叉时是「折点 → 子卡」这一段。白描边压在线上，不会和连线糊在一起。 */
       var mx = Math.abs(y1 - y2) < 0.6 ? (x1 + x2) / 2 : (fx + x2) / 2;
@@ -10052,6 +10060,34 @@ function lineageSVG(a) {
   return LIN_AXIS === 'row' ? lineageRows(a) : lineageCols(a);
 }
 
+/* v66：在「样本类型」这一列，把该样本源下的其它样本也罗列出来 ——
+   当前样本正常上色，其余灰色、只展示不参与交互。
+   数据来源有两路：① 档案里 subj 相同的真实样本；② 显式声明的 sibs（演示用，
+   因为内置队列一例一样本源，不补就看不到这个能力）。 */
+function linWithSibs(a) {
+  if (!a) return a;
+  var self = a.lin.filter(function (n) { return n.k === 'self'; })[0];
+  var parent = self ? self.from : '';
+  var seen = {};
+  var extra = [];
+  (a.sibs || []).forEach(function (x) {
+    if (!x || !x.id || seen[x.id] || x.id === SAMP_CUR) return;
+    seen[x.id] = 1;
+    extra.push({ id: x.id, lv: 1, k: 'self', t: x.id, s: x.s || '同一样本源的样本', from: parent, muted: true });
+  });
+  sampIds().forEach(function (id) {
+    var o = SAMP_ARCHIVE[id];
+    if (id === SAMP_CUR || seen[id] || !o || !a.subj || o.subj !== a.subj) return;
+    seen[id] = 1;
+    extra.push({ id: id, lv: 1, k: 'self', t: id, s: '同一样本源的样本', from: parent, muted: true });
+  });
+  if (!extra.length) return a;
+  var copy = {};
+  Object.keys(a).forEach(function (k) { copy[k] = a[k]; });
+  copy.lin = a.lin.concat(extra);
+  return copy;
+}
+
 /* 方向切换。按钮文案写的是**点下去会变成什么**（「上下结构」/「横向泳道」），
    而不是当前是什么 —— 后者会让人以为按钮是个状态标签。 */
 function syncLinAxis() {
@@ -10066,7 +10102,7 @@ function toggleLinAxis() { LIN_AXIS = LIN_AXIS === 'row' ? 'col' : 'row'; syncLi
 
 function renderLineage() {
   var box = $('#linBox'); if (!box) return;
-  var a = sampById(SAMP_CUR);
+  var a = linWithSibs(sampById(SAMP_CUR));
   if (!a) { box.innerHTML = ''; renderLinTable(null); syncLinMeta(); return; }
   box.innerHTML = lineageSVG(a);
   renderLinTable(a);

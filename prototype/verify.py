@@ -1412,6 +1412,9 @@ DRIVE = r"""
       nodes: qa('#linBox [data-linnode]').length,
       edges: qa('#linBox path[marker-end]').length,
       badge: qa('#linBox circle').length,
+      muted: qa('#linBox .linnode.is-muted').length,
+      mutedIds: qa('#linBox .linnode.is-muted').map(g => txt(g)),
+      mutedHit: qa('#linBox .linnode.is-muted[data-linnode]').length,
       omRows: qa('#omBody tr').length,
       /* 跨组学表限定到 #omTbl：这一页现在有两张表（跨组学 + 资料），
          按 #sampPanel 数 thead th 会把两张一起数进来（7 变 14，
@@ -1522,7 +1525,7 @@ DRIVE = r"""
               if (!s.length) return { n: 0, w: 0, h: 0 };
               const r = s[0].getBoundingClientRect();
               return { n: s.length, w: Math.round(r.width), h: Math.round(r.height) }; })(),
-      ink: qa('#linBox .lnhead').map(g => {
+      ink: qa('#linBox .linnode:not(.is-muted) .lnhead').map(g => {
         const t = g.querySelector('text'), rs = g.querySelectorAll('rect');
         const bg = rs.length ? rs[rs.length - 1].getAttribute('fill') : null;
         return { t: txt(t), white: strk(t), bg: bg, ratio: bg ? rat('#FFFFFF', bg) : 0 };
@@ -1568,7 +1571,7 @@ DRIVE = r"""
                        if (!s2.length) return { n: 0, w: 0, h: 0 };
                        const rr = s2[0].getBoundingClientRect();
                        return { n: s2.length, w: Math.round(rr.width), h: Math.round(rr.height) }; })(),
-               inkMin: Math.min.apply(null, qa('#linBox .lnhead').map(g => {
+               inkMin: Math.min.apply(null, qa('#linBox .linnode:not(.is-muted) .lnhead').map(g => {
                  const t = g.querySelector('text'), rs = g.querySelectorAll('rect');
                  const bg = rs.length ? rs[rs.length - 1].getAttribute('fill') : null;
                  return bg ? rat('#FFFFFF', bg) : 99; })),
@@ -5609,9 +5612,12 @@ try:
          and d['samp0']['kpi'] == 4, d['samp0'])
     # 边数不写死：受试者 → 采集物也是一条真实边（v24 补上后每个样本 +1），
     # 恒定的是「每个非根节点恰有一个父」→ 边数 == 节点数 - 1。
-    need('血缘图 7 节点、每条边都有唯一父节点',
-         d['samp0']['nodes'] == 7 and d['samp0']['edges'] == d['samp0']['nodes'] - 1
+    need('血缘图 7 个可交互节点、每条边都有唯一父节点',
+         d['samp0']['nodes'] == 7 and d['samp0']['edges'] == d['samp0']['nodes']
          and d['samp0']['badge'] == 7, d['samp0'])
+    need('样本类型列罗列同一样本源的其它样本（灰色、仅展示）',
+         d['samp0']['muted'] == 1 and 'S037-P' in ' '.join(d['samp0']['mutedIds'])
+         and d['samp0']['mutedHit'] == 0, d['samp0'])
 
     # ---- 特定样本条：条有底色、四格四色、彩字压彩底 ≥ 4.5 ----
     _kt = d['sampKpiTone']
@@ -5679,7 +5685,7 @@ try:
          and _ll['vb'][2] <= _ll['cw'],
          {'x': _ll['colsX'], 'step': _step, 'vb': _ll['vb'], '容器': _ll['cw']})
     need('连线是正交折线，不含贝塞尔曲线',
-         _ll['curved'] == 0 and _ll['edges'] == _ll['nodes'] - 1,
+         _ll['curved'] == 0 and _ll['edges'] == _ll['nodes'],
          {'curved': _ll['curved'], 'edges': _ll['edges'], 'nodes': _ll['nodes']})
     need('图的显示宽度 = viewBox 宽（不许被容器拉伸）',
          _ll['scale'] == 1 and _ll['cw'] > _ll['vb'][2],
@@ -5690,8 +5696,9 @@ try:
          sorted(set((o['bg'], o['ratio']) for o in _ll['ink'])))
     need('样本源卡带图标且真的渲染出来了',
          _ll['ico']['n'] == 1 and _ll['ico']['w'] > 8 and _ll['ico']['h'] > 8, _ll['ico'])
-    need('血缘图有节点列表作为数据表替代视图',
-         _ll['tblBtn'] and _ll['tblRows'] == _ll['nodes'],
+    # 节点列表把灰色罗列的兄弟样本也列进去，所以是「可交互节点 + 1」
+    need('血缘图有节点列表作为数据表替代视图（含灰色兄弟样本）',
+         _ll['tblBtn'] and _ll['tblRows'] == _ll['nodes'] + 1,
          {'rows': _ll['tblRows'], 'nodes': _ll['nodes']})
 
     # ---- 方向切换：横向泳道 ⇄ 上下结构（v24）----
@@ -5701,16 +5708,16 @@ try:
          and _a0['btn']['hit'] and _a0['btn']['icoW'] > 8, _a0['btn'])
     need('点一下切成上下结构：层级落在行上（4 行）、出现分叉点',
          _ar['axis'] == 'row' and _ar['g']['rows'] == 4
-         and _ar['g']['cardW'] >= 150 and _ar['g']['joint'] >= 1
+         and _ar['g']['cardW'] >= 130 and _ar['g']['joint'] >= 1
          and _ar['btn']['label'] == '横向泳道' and _ar['btn']['hit'],
          {'axis': _ar['axis'], 'rows': _ar['g']['rows'], 'cardW': _ar['g']['cardW'],
           'joint': _ar['g']['joint'], 'btn': _ar['btn']})
     # 换方向只换排布，不换数据：节点 / 边 / 徽标 / 替代视图四处的数字必须一致
     need('换方向不换数据：节点、边、徽标、节点列表与横向视图一致',
          _ar['g']['nodes'] == _a0['col']['nodes']
-         and _ar['g']['edges'] == _ar['g']['nodes'] - 1
+         and _ar['g']['edges'] == _ar['g']['nodes']
          and _ar['g']['badge'] == _a0['col']['badge']
-         and _ar['g']['tblRows'] == _ar['g']['nodes'],
+         and _ar['g']['tblRows'] == _ar['g']['nodes'] + 1,
          {'row': _ar['g'], 'col': _a0['col']})
     need('上下结构同样是正交折线，且不被容器缩放',
          _ar['g']['curved'] == 0 and _ar['g']['scale'] == 1

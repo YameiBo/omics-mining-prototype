@@ -5780,7 +5780,7 @@ try:
     _sl = d['sampList']
     need('列表每页 15 行 · 8 个维度列',  _sl['rows'] == 15 and _sl['cols'] == 8, _sl)
     need('列表首行是 S001（按 ID 排）',    _sl['first'] == 'S001', _sl['first'])
-    need('组学覆盖三个字标 · 首例全产出',  _sl['omtags'] == 3 and _sl['omOn'] == 3, _sl)
+    need('组学覆盖四个字标 · 首例三路产出', _sl['omtags'] == 4 and _sl['omOn'] == 3, _sl)
     need('分页器报出 15 / 75',            '共 75 条' in _sl['pager']
                                      and _sl['pager'].startswith('第 1'), _sl['pager'])
     _p2 = d['sampPage2']

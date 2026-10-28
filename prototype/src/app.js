@@ -9643,7 +9643,8 @@ function fillSampFilters() {
 function qcTag(qc) {
   var st = qc.st || 'ok';
   var cls = st === 'danger' ? 'tag--danger' : st === 'warn' ? 'tag--warn' : 'tag--ok';
-  var s = st === 'danger' ? '不合格' : st === 'warn' ? '部分合格' : '合格';
+  var s = st === 'danger' ? '不合格' : st === 'warn' ? '未知' : '合格';
+  if (s === '未知') cls = '';
   return '<span class="tag ' + cls + '" title="' + esc(qc.verdict || s) + '">' + s + '</span>';
 }
 function csTag(cs) {
@@ -9656,7 +9657,7 @@ function csTag(cs) {
 function omTags(a) {
   var done = {};
   a.om.forEach(function (x) { if (!x.miss) done[x.o] = 1; });
-  return ['基因组', '转录组', '蛋白组'].map(function (o) {
+  return ['基因组', '转录组', '蛋白组', '代谢组'].map(function (o) {
     var on = !!done[o];
     return '<span class="omtag' + (on ? ' is-on' : '') + '" role="img"'
       + ' aria-label="' + o + (on ? ' 已产出' : ' 未产出') + '">' + o.charAt(0) + '</span>';
@@ -9736,7 +9737,7 @@ function renderSampKpis() {
               '样本源ID：' + (a.subj || '——'), 'id')
     + mcellOf('样本类型', a.mat || '——', '',
               (a.t ? a.t + ' 采集' : '采集时间未登记') + (a.store ? ' · ' + a.store : ''), 'mat')
-    + mcellOf('衍生样本', String(dv), '份',
+    + mcellOf('分装 / 衍生', String(dv), '份',
               frac ? '另有 ' + frac + ' 份分装材料' : '尚无分装与衍生材料', 'derive')
     + mcellOf('关联组学', String(done.length), '路',
               done.length
@@ -11352,7 +11353,7 @@ function dlSave(b) {
 /* ---------- 各入口的文件规格 ---------- */
 /* total = 源数据的全量条数。表格是「抽样展示」，导出的是**表里这些行** ——
    全量数字写在确认框里，用户点之前就知道这次拿到的是全量还是前若干条。 */
-function dlSampQcTxt(st) { return st === 'danger' ? '不合格' : st === 'warn' ? '部分合格' : '合格'; }
+function dlSampQcTxt(st) { return st === 'danger' ? '不合格' : st === 'warn' ? '未知' : '合格'; }
 function dlSampOmTxt(a) {
   return a.om.map(function (x) { return x.o + (x.miss ? '（缺）' : ''); }).join(' / ');
 }

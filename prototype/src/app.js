@@ -9658,9 +9658,10 @@ function csTag(cs) {
 function omTags(a) {
   var done = {};
   a.om.forEach(function (x) { if (!x.miss) done[x.o] = 1; });
+  var hue = { '基因组': 'g', '转录组': 't', '蛋白组': 'p', '代谢组': 'm' };
   return ['基因组', '转录组', '蛋白组', '代谢组'].map(function (o) {
     var on = !!done[o];
-    return '<span class="omtag' + (on ? ' is-on' : '') + '" role="img"'
+    return '<span class="omtag omtag--' + hue[o] + (on ? ' is-on' : '') + '" role="img"'
       + ' aria-label="' + o + (on ? ' 已产出' : ' 未产出') + '">' + o.charAt(0) + '</span>';
   }).join('');
 }

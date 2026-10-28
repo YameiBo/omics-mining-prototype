@@ -608,6 +608,12 @@ th.is-desc .thsort__i { transform: rotate(180deg); }
   background: var(--color-brand-soft); border-color: var(--color-brand-line);
   color: var(--color-brand-deep); font-weight: 600;
 }
+/* v67：四路组学各用一套色相，扫一眼就能分辨「哪一路产出了」——
+   底色浅、字色深，四组对比度都 ≥ 4.5（与全站 AA 口径一致）。 */
+.omtag.is-on.omtag--g { background: #E8F1FC; border-color: #B7D2F0; color: #1A5FB4; }  /* 基因组 · 蓝 */
+.omtag.is-on.omtag--t { background: #E6F5EF; border-color: #B7E2D0; color: #0E6B4F; }  /* 转录组 · 绿 */
+.omtag.is-on.omtag--p { background: #F1EBFB; border-color: #D5C2F2; color: #6B2FBE; }  /* 蛋白组 · 紫 */
+.omtag.is-on.omtag--m { background: #FDF1E3; border-color: #F2D6B0; color: #8A5200; }  /* 代谢组 · 琥珀 */
 
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .pager__n { font-size: 12.5px; color: var(--color-ink2); }

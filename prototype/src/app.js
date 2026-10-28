@@ -9733,9 +9733,15 @@ function renderSampKpis() {
      不能让「队列 X ·  · SUBJ-Y」这种空档留在卡片上。 */
   box.innerHTML =
       mcellOf('样本 ID', SAMP_CUR, '',
-              [a.cohort, a.no].filter(Boolean).join(' · ') || '尚未登记队列信息', 'id')
-    + mcellOf('样本源ID', a.subj || '——', '',
-              '数据来源：' + (a.src || '系统'), 'subj');
+              '样本源ID：' + (a.subj || '——'), 'id')
+    + mcellOf('样本类型', a.mat || '——', '',
+              (a.t ? a.t + ' 采集' : '采集时间未登记') + (a.store ? ' · ' + a.store : ''), 'mat')
+    + mcellOf('衍生样本', String(dv), '份',
+              frac ? '另有 ' + frac + ' 份分装材料' : '尚无分装与衍生材料', 'derive')
+    + mcellOf('关联组学', String(done.length), '路',
+              done.length
+                ? names + (a.om.length > done.length ? ' · ' + (a.om.length - done.length) + ' 路缺失' : '')
+                : '尚未在任何项目中产出组学数据', 'om');
 }
 
 /* ---------- 血缘谱系图（横向四列，v23） ----------

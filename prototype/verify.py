@@ -5606,14 +5606,14 @@ try:
     need('样本档案默认选中 S037 · 选中态在列表行上（chips 已撤）',
          d['samp0']['chipsGone'] and d['samp0']['rowOn'] == 1
          and d['samp0']['onId'] == 'S037'
-         and d['samp0']['kpi'] == 2, d['samp0'])
+         and d['samp0']['kpi'] == 4, d['samp0'])
     # 边数不写死：受试者 → 采集物也是一条真实边（v24 补上后每个样本 +1），
     # 恒定的是「每个非根节点恰有一个父」→ 边数 == 节点数 - 1。
     need('血缘图 7 节点、每条边都有唯一父节点',
          d['samp0']['nodes'] == 7 and d['samp0']['edges'] == d['samp0']['nodes'] - 1
          and d['samp0']['badge'] == 7, d['samp0'])
 
-    # ---- 特定样本条：条有底色、两格两色、彩字压彩底 ≥ 4.5 ----
+    # ---- 特定样本条：条有底色、四格四色、彩字压彩底 ≥ 4.5 ----
     _kt = d['sampKpiTone']
     _W = ('rgb(255, 255, 255)', 'rgba(0, 0, 0, 0)', 'transparent')
     need('特定样本条不再是白底白带（条底与四格底都不是白）',
@@ -5631,13 +5631,13 @@ try:
     #    (max+0.05)/(min+0.05)，恒 ≥1，写成 > 1.0 等于永远通过：
     #    真把四格做得比条还深（层次反转），这条照样是绿的。
     #    所以这句判的是**亮度本身**，且要求拉得开 ≥0.02（光「不等于」不够）。
-    need('两格浮在彩带上（每格都比条底亮一档，不糊进条里）',
+    need('四格浮在彩带上（每格都比条底亮一档，不糊进条里）',
          all(c['L'] > _kt['wrapL'] for c in _kt['cells'])
          and min(c['L'] - _kt['wrapL'] for c in _kt['cells']) >= 0.02,
          {'wrapL': _kt['wrapL'], 'cellL': [c['L'] for c in _kt['cells']],
           'sym': _kt['cellVsWrap']})
-    need('两格各自上色（两格两色，不是同一个色号刷两遍）',
-         _kt['n'] == 2 and len(set(_kt['hues'])) == 2, {'n': _kt['n'], 'hues': _kt['hues']})
+    need('四格各自上色（四格四色，不是同一个色号刷四遍）',
+         _kt['n'] == 4 and len(set(_kt['hues'])) == 4, {'n': _kt['n'], 'hues': _kt['hues']})
     need('每格顶部 3px 色条真的渲染出来（inset 阴影，不是只挂了个类名）',
          all('inset' in c['bar'] and '3px' in c['bar'] for c in _kt['cells'])
          and all(c['radius'] != '0px' for c in _kt['cells']),
@@ -5649,7 +5649,7 @@ try:
          {'min': _kt['minR'],
           'per': [{'v': c['v'], 'rV': c['rV'], 'rL': c['rL'], 'rF': c['rF']} for c in _kt['cells']]})
     # gap 从 1px 变 10px 是为了让条的底色看得见；格子仍须并排（挤成两行说明宽度不够）。
-    need('特定样本条两格仍并排一行、条底在格间露得出来',
+    need('特定样本条四格仍并排一行、条底在格间露得出来',
          _kt['rows'] == 1 and _kt['gap'] >= 6 and _kt['pad'] >= 6,
          {'rows': _kt['rows'], 'gap': _kt['gap'], 'pad': _kt['pad']})
     # ⚠ 「四格一行」不足以说明这条没被压坏：抽屉体是 flex 列时整体会被压成 20px 高，
@@ -5905,7 +5905,7 @@ try:
          _nd['omRows'] == 1 and '尚未在任何项目中产出组学数据' in _nd['omBlob']
          and _nd['omMeta'] == '尚未产出组学数据', {'meta': _nd['omMeta'], 'blob': _nd['omBlob'][:70]})
     need('新样本 KPI 不留空档（没例号就不出「·  ·」）',
-         '·  ·' not in ' '.join(_nd['kpiF']) and '第 76 例' in ' '.join(_nd['kpiF']), _nd['kpiF'])
+         '·  ·' not in ' '.join(_nd['kpiF']) and any('样本源ID' in x for x in _nd['kpiF']), _nd['kpiF'])
     need('新样本信息卡仍按 6 组 27 字段渲染（缺项显示「——」）',
          _nd['infoGroups'] == 4 and _nd['infoFields'] == 16 and '尚未上架' in _nd['infoBlob'],
          {'groups': _nd['infoGroups'], 'fields': _nd['infoFields']})

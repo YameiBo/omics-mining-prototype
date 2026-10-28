@@ -386,9 +386,9 @@
               <label class="fld"><span class="fld__l">知情同意</span>
                 <select class="sel" id="fltCs" data-samp-flt="cs" style="width:auto">
                   <option value="">全部</option>
-                  <option>已签署</option>
-                  <option>待补签</option>
-                  <option>已撤回</option>
+                  <option>是</option>
+                  <option>否</option>
+                  <option>未知</option>
                 </select>
               </label>
               <button type="button" class="btn btn--quiet ml-auto" data-samp-fltreset><i class="fa-solid fa-rotate ico"></i>重置筛选</button>
@@ -397,22 +397,19 @@
             <!-- 候选 chips 已撤（v27）：12 个样本 chip 的罗列与下方列表完全重复，
                  选中样本走列表行（data-samp-pick 同一套委托）。空态提示保留。 -->
             <div class="tempty" id="sampEmpty" hidden>
-              没有匹配的样本。样本 ID 形如 <code>S037</code>，也可以用受试者编号（<code>SUBJ-0371</code>）或疾病关键词检索。
+              没有匹配的样本。样本 ID 形如 <code>S037</code>，也可以用样本源ID（<code>SUBJ-0371</code>）或疾病关键词检索。
             </div>
 
             <div class="tblwrap mt-3">
               <table class="tbl" id="sampTbl">
                 <thead><tr>
                   <th class="nw"><button type="button" class="thsort" data-samp-sort="id">样本 ID<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
-                  <th class="nw">受试者</th>
+                  <th class="nw">样本源ID</th>
                   <th class="nw">数据来源</th>
-                  <th>疾病</th>
-                  <th class="nw">分期</th>
                   <th class="nw"><button type="button" class="thsort" data-samp-sort="t">采集日期<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
                   <th class="nw">存储位置</th>
                   <th><button type="button" class="thsort" data-samp-sort="qc">质控结论<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
                   <th class="nw">组学覆盖</th>
-                  <th class="num"><button type="button" class="thsort" data-samp-sort="docs">资料<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
                   <th class="nw">知情同意</th>
                 </tr></thead>
                 <tbody id="sampTbody"></tbody>
@@ -965,7 +962,7 @@
               </div>
               <div class="hr"></div>
               <div class="stack">
-                <label class="chk"><input type="checkbox" checked data-param="pair">启用配对设计（同一受试者的配对样本）</label>
+                <label class="chk"><input type="checkbox" checked data-param="pair">启用配对设计（同一样本源的配对样本）</label>
                 <label class="chk"><input type="checkbox" data-param="batch">纳入批次效应校正（需提供批次字段）</label>
                 <label class="chk"><input type="checkbox" checked data-param="outlier">自动标记离群样本（不自动剔除）</label>
               </div>
@@ -2237,7 +2234,7 @@
                写死的话，换个样本就会看到上一个样本的数字。 -->
         <div class="mrow" id="sampKpis"></div>
 
-        <!-- ② 样本信息。字段全部由 renderSampInfo() 现算：既有的顶层字段（受试者
+        <!-- ② 样本信息。字段全部由 renderSampInfo() 现算：既有的顶层字段（样本源ID
                编号 / 采集物 / 采集时间 / 存放条件）、派生的分装数与所属项目、以及
                meta 里的临床 / 存储 / 质控 / 知情同意，先并到一处再分组。
                信息与资料是本页的两个落点：这张卡回答「这个样本是什么」，

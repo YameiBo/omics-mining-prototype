@@ -7649,7 +7649,7 @@ function pnewStep5() {
     + '</div>'
     + '<div class="hr"></div>'
     + '<div class="stack">'
-    + '<label class="chk"><input type="checkbox" data-pnp="pair"' + (pr.pair ? ' checked' : '') + '>启用配对设计（同一受试者的配对样本）</label>'
+    + '<label class="chk"><input type="checkbox" data-pnp="pair"' + (pr.pair ? ' checked' : '') + '>启用配对设计（同一样本源的配对样本）</label>'
     + '<label class="chk"><input type="checkbox" data-pnp="batch"' + (pr.batch ? ' checked' : '') + '>纳入批次效应校正（需提供批次字段）</label>'
     + '<label class="chk"><input type="checkbox" data-pnp="outlier"' + (pr.outlier ? ' checked' : '') + '>自动标记离群样本（不自动剔除）</label>'
     + '</div>'
@@ -9108,7 +9108,7 @@ function agentConfirm(q) {
    ============================================================
    样本 ID 是这一页的主键：血缘节点与跨组学记录都挂在它下面。
 
-   为什么这两个东西要放在一起：同一个受试者的血清与肝组织是两管不同的
+   为什么这两个东西要放在一起：同一个样本源的血清与肝组织是两管不同的
    物理材料，血清跑蛋白组、肝组织跑基因组与转录组，三份数据落在不同项目、
    不同批次，文件层面没有任何共同字段 —— 能把它们认成同一个人的只有样本
    唯一 ID。血缘谱系在这里不只是谱系图，它标出了每条组学记录用的是哪一份
@@ -9126,7 +9126,7 @@ var SAMP_FULL = {
   S037: {
     cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '自创建',
     mat: '肝组织 + 外周血', t: '2026-03-14', store: '液氮 / -80 ℃',
-    /* meta / docs 只补**不能从别处派生**的东西。样本 ID、受试者编号、
+    /* meta / docs 只补**不能从别处派生**的东西。样本 ID、样本源ID、
        采集物、采集时间、存放条件仍是上面的顶层字段；分装与衍生数取自 lin、
        所属项目取自 om —— 同一件事存两份，改数据时必然一处新一处旧。 */
     meta: {
@@ -9138,18 +9138,18 @@ var SAMP_FULL = {
          它为什么同时缺转录组与蛋白组。改这里就要回头核对另外两处。 */
       qc: { dnaC: '68.4 ng/µL', dnaP: '1.89（260/280）', rin: '8.7',
             plasma: '无明显溶血', verdict: '合格', st: 'ok' },
-      consent: { st: '已签署', no: 'EC-TJ-2026-018', t: '2026-03-12',
+      consent: { st: '是', no: 'EC-TJ-2026-018', t: '2026-03-12',
                  use: '仅限本课题研究，不含商业用途' }
     },
     docs: [
-      { k: '知情同意书', n: 'S037_ICF_签署版.pdf', sz: '412 KB', who: '张岚', t: '2026-03-12 09:30', note: '受试者签署原件扫描件' },
-      { k: '伦理批件', n: 'EC-TJ-2026-018_批件.pdf', sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部受试者' },
+      { k: '知情同意书', n: 'S037_ICF_签署版.pdf', sz: '412 KB', who: '张岚', t: '2026-03-12 09:30', note: '样本源签署原件扫描件' },
+      { k: '伦理批件', n: 'EC-TJ-2026-018_批件.pdf', sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部样本源' },
       { k: '病理报告', n: 'S037_病理报告.pdf', sz: '1.2 MB', who: '李劼', t: '2026-03-18 11:20', note: '肝细胞癌，中分化' },
       { k: '样本质检报告', n: 'S037_质检_DNA-RNA.pdf', sz: '264 KB', who: '王倩', t: '2026-03-20 16:45', note: '组织 DNA 与 RNA 均合格' },
       { k: '采集与处理记录', n: 'S037_采集处理记录.xlsx', sz: '38 KB', who: '张岚', t: '2026-03-14 11:05', note: '采集到液氮入库全过程' }
     ],
     lin: [
-      { id: 'SUBJ-0371', lv: 0, k: 'subj', t: '受试者', s: 'SUBJ-0371 · 队列第 37 例' },
+      { id: 'SUBJ-0371', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0371 · 队列第 37 例' },
       { id: 'S037', lv: 1, k: 'self', t: 'S037', s: '肝组织 + 外周血', from: 'SUBJ-0371' },
       { id: 'S037-L', lv: 2, k: 'frac', t: 'S037-L', s: '肝组织块 · 液氮', from: 'S037', via: '分装' },
       { id: 'S037-B', lv: 2, k: 'frac', t: 'S037-B', s: '血浆分装 · 3 管', from: 'S037', via: '分装' },
@@ -9174,19 +9174,19 @@ var SAMP_FULL = {
             plasma: '无明显溶血', verdict: '合格', st: 'ok' },
       /* 同意书按**原始登记 ID S068A** 签署 —— 纸质件早于 ID 归并，
          两者对不上正是这一例要靠变更记录留痕的原因。 */
-      consent: { st: '已签署', no: 'EC-TJ-2026-018', t: '2026-03-17',
+      consent: { st: '是', no: 'EC-TJ-2026-018', t: '2026-03-17',
                  use: '仅限本课题研究，不含商业用途' }
     },
     docs: [
       { k: '知情同意书', n: 'S068A_ICF_签署版.pdf', sz: '396 KB', who: '张岚', t: '2026-03-17 10:12', note: '按原始登记 ID S068A 签署' },
-      { k: '伦理批件', n: 'EC-TJ-2026-018_批件.pdf', sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部受试者' },
+      { k: '伦理批件', n: 'EC-TJ-2026-018_批件.pdf', sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部样本源' },
       { k: '病理报告', n: 'S068_病理报告.pdf', sz: '1.1 MB', who: '李劼', t: '2026-03-22 15:40', note: '肝细胞癌，低分化' },
       { k: '样本标识变更记录', n: 'S068_ID映射说明.pdf', sz: '96 KB', who: '王倩', t: '2026-03-19 09:05', note: 'S068A → S068 归并依据与校验位核对记录' }
     ],
     /* 这一条的看点全在血缘上：原始登记 ID 少写一位校验位，靠 ID 映射归并到
        S068 之后，两路组学才认回同一个人 —— 唯一 ID 的价值在这里最直白。 */
     lin: [
-      { id: 'SUBJ-0429', lv: 0, k: 'subj', t: '受试者', s: 'SUBJ-0429 · 队列第 68 例' },
+      { id: 'SUBJ-0429', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0429 · 队列第 68 例' },
       { id: 'S068A', lv: 1, k: 'alias', t: 'S068A', s: '原始登记 ID · 采集物', from: 'SUBJ-0429' },
       { id: 'S068', lv: 2, k: 'self', t: 'S068', s: '归并后唯一 ID', from: 'S068A', via: 'ID 映射' },
       { id: 'S068-L', lv: 3, k: 'frac', t: 'S068-L', s: '肝组织块 · 液氮', from: 'S068', via: '分装' },
@@ -9212,16 +9212,16 @@ var SAMP_FULL = {
             /* st 必须是 danger：这一例的蛋白组真的没产出来，和「缺蛋白组那 4 例」
                是同一批。标 warn 的话，质控筛选就筛不出它，因果链断在这里。 */
             verdict: '组织合格 · 血浆不合格', st: 'danger' },
-      consent: { st: '已签署', no: 'EC-TJ-2026-018', t: '2026-03-09',
+      consent: { st: '是', no: 'EC-TJ-2026-018', t: '2026-03-09',
                  use: '仅限本课题研究，不含商业用途' }
     },
     docs: [
-      { k: '知情同意书', n: 'S004_ICF_签署版.pdf', sz: '404 KB', who: '张岚', t: '2026-03-09 16:22', note: '受试者签署原件扫描件' },
+      { k: '知情同意书', n: 'S004_ICF_签署版.pdf', sz: '404 KB', who: '张岚', t: '2026-03-09 16:22', note: '样本源签署原件扫描件' },
       { k: '病理报告', n: 'S004_病理报告.pdf', sz: '1.3 MB', who: '李劼', t: '2026-03-16 10:05', note: '肝细胞癌，中低分化' },
       { k: '样本质检报告', n: 'S004_质检_血浆不合格.pdf', sz: '248 KB', who: '王倩', t: '2026-03-18 09:40', note: '血浆中度溶血，蛋白组建库未通过；组织 DNA / RNA 合格' }
     ],
     lin: [
-      { id: 'SUBJ-0031', lv: 0, k: 'subj', t: '受试者', s: 'SUBJ-0031 · 队列第 4 例' },
+      { id: 'SUBJ-0031', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0031 · 队列第 4 例' },
       { id: 'S004', lv: 1, k: 'self', t: 'S004', s: '肝组织 + 外周血', from: 'SUBJ-0031' },
       { id: 'S004-L', lv: 2, k: 'frac', t: 'S004-L', s: '肝组织块 · 液氮', from: 'S004', via: '分装' }
     ],
@@ -9243,16 +9243,16 @@ var SAMP_FULL = {
       qc: { dnaC: '58.6 ng/µL', dnaP: '1.85（260/280）', rin: '8.1',
             plasma: '血清分离量 0.3 mL，低于 1.0 mL 建库下限',
             verdict: '组织合格 · 血清不合格', st: 'danger' },
-      consent: { st: '已签署', no: 'EC-TJ-2026-018', t: '2026-03-20',
+      consent: { st: '是', no: 'EC-TJ-2026-018', t: '2026-03-20',
                  use: '仅限本课题研究，不含商业用途' }
     },
     docs: [
-      { k: '知情同意书', n: 'S052_ICF_签署版.pdf', sz: '408 KB', who: '张岚', t: '2026-03-20 17:05', note: '受试者签署原件扫描件' },
+      { k: '知情同意书', n: 'S052_ICF_签署版.pdf', sz: '408 KB', who: '张岚', t: '2026-03-20 17:05', note: '样本源签署原件扫描件' },
       { k: '样本质检报告', n: 'S052_质检_血清不足.pdf', sz: '232 KB', who: '王倩', t: '2026-03-22 14:30', note: '组织 DNA / RNA 合格；血清 0.3 mL 不足建库' },
       { k: '采集与处理记录', n: 'S052_采集处理记录.xlsx', sz: '34 KB', who: '张岚', t: '2026-03-21 10:40', note: '采集到液氮入库全过程' }
     ],
     lin: [
-      { id: 'SUBJ-0164', lv: 0, k: 'subj', t: '受试者', s: 'SUBJ-0164 · 队列第 52 例' },
+      { id: 'SUBJ-0164', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0164 · 队列第 52 例' },
       { id: 'S052', lv: 1, k: 'self', t: 'S052', s: '肝组织 + 外周血', from: 'SUBJ-0164' },
       { id: 'S052-L', lv: 2, k: 'frac', t: 'S052-L', s: '肝组织块 · 液氮', from: 'S052', via: '分装' }
     ],
@@ -9322,14 +9322,14 @@ function genSamp(i) {
     st: st
   };
 
-  var cst = CONSENT_REVOK.indexOf(id) >= 0 ? '已撤回'
-          : CONSENT_PEND.indexOf(id) >= 0 ? '待补签' : '已签署';
+  var cst = CONSENT_REVOK.indexOf(id) >= 0 ? '未知'
+          : CONSENT_PEND.indexOf(id) >= 0 ? '否' : '是';
   var consent = { st: cst, no: 'EC-TJ-2026-018', t: cdate(Math.max(0, day - 2)),
                   use: '仅限本课题研究，不含商业用途' };
 
   var docs = [
     { k: '知情同意书', n: id + '_ICF_签署版.pdf', sz: (380 + r(60)) + ' KB',
-      who: '张岚', t: consent.t + ' ' + p2(9 + r(8)) + ':' + p2(r(60)), note: '受试者签署原件扫描件' },
+      who: '张岚', t: consent.t + ' ' + p2(9 + r(8)) + ':' + p2(r(60)), note: '样本源签署原件扫描件' },
     { k: '病理报告', n: id + '_病理报告.pdf', sz: '1.' + r(9) + ' MB', who: '李劼',
       t: cdate(Math.min(39, day + 6)) + ' ' + p2(9 + r(8)) + ':' + p2(r(60)),
       note: dx + '，' + ['高分化', '中分化', '中低分化', '低分化'][r(4)] },
@@ -9341,13 +9341,13 @@ function genSamp(i) {
     sz: (32 + r(12)) + ' KB', who: '张岚', t: t + ' ' + hm, note: '采集到液氮入库全过程' });
   /* 伦理批件是队列级文件，只需归档一次 —— 不是每例都要挂一份 */
   if (r(4) === 0) docs.push({ k: '伦理批件', n: 'EC-TJ-2026-018_批件.pdf',
-    sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部受试者' });
+    sz: '188 KB', who: '张岚', t: '2026-03-05 14:02', note: '覆盖本队列全部样本源' });
   if (r(5) === 0) docs.push({ k: '出库与使用记录', n: id + '_出库记录.xlsx',
     sz: (24 + r(20)) + ' KB', who: '王倩', t: cdate(Math.min(39, day + 20)) + ' ' + hm,
     note: '已出库 ' + (1 + r(3)) + ' 次，按审批单执行' });
 
   var lin = [
-    { id: subj, lv: 0, k: 'subj', t: '受试者', s: subj + ' · 队列第 ' + i + ' 例' },
+    { id: subj, lv: 0, k: 'subj', t: '样本源ID', s: subj + ' · 队列第 ' + i + ' 例' },
     { id: id, lv: 1, k: 'self', t: id, s: '肝组织 + 外周血', from: subj },
     { id: id + '-L', lv: 2, k: 'frac', t: id + '-L', s: '肝组织块 · 液氮', from: id, via: '分装' },
     { id: id + '-B', lv: 2, k: 'frac', t: id + '-B', s: '血浆分装 · ' + (2 + r(3)) + ' 管', from: id, via: '分装' }
@@ -9406,7 +9406,7 @@ function sampById(id) { return SAMP_ARCHIVE[id] || null; }
    不排序的话列表第一行会是 S037 而不是 S001。 */
 function sampIds() { return Object.keys(SAMP_ARCHIVE).sort(); }
 
-/* 搜索命中：样本 ID / 受试者编号 / 疾病 / 采集物 / 队列 都能查。
+/* 搜索命中：样本 ID / 样本源ID / 疾病 / 采集物 / 队列 都能查。
    带「例」的编号（第 37 例）也认，评审习惯照着文档念。 */
 function sampMatch(q) {
   q = String(q == null ? '' : q).trim().toLowerCase();
@@ -9647,9 +9647,9 @@ function qcTag(qc) {
   return '<span class="tag ' + cls + '" title="' + esc(qc.verdict || s) + '">' + s + '</span>';
 }
 function csTag(cs) {
-  var s = cs.st || '—';
-  var cls = s === '已签署' ? 'tag--ok' : s === '待补签' ? 'tag--warn' : s === '已撤回' ? 'tag--danger' : '';
-  return '<span class="tag ' + cls + '">' + esc(s) + '</span>';
+  var s = cs.st || '';
+  var cls = s === '是' ? 'tag--ok' : s === '否' ? 'tag--warn' : s === '未知' ? 'tag--danger' : '';
+  return '<span class="tag ' + cls + '">' + esc(s || '—') + '</span>';
 }
 /* 组学覆盖画成三个字标而不是进度条：这一列要回答「缺哪一路」，
    不是「完成了百分之多少」。 */
@@ -9677,16 +9677,13 @@ function renderSampList() {
       + '<td class="nw"><button type="button" class="sampid" data-samp-pick="' + id + '">' + id + '</button></td>'
       + '<td class="nw num">' + esc(a.subj) + '</td>'
       + '<td class="nw">' + esc(a.src || '系统') + '</td>'
-      + '<td>' + esc(a.dx) + '</td>'
-      + '<td class="nw">' + esc(m.stage || '—') + '</td>'
       + '<td class="nw num">' + esc(a.t) + '</td>'
       + '<td class="nw num">' + esc(m.loc || '—') + '</td>'
       + '<td>' + qcTag(m.qc || {}) + '</td>'
       + '<td class="nw">' + omTags(a) + '</td>'
-      + '<td class="num">' + a.docs.length + '</td>'
       + '<td class="nw">' + csTag(m.consent || {}) + '</td>'
       + '</tr>';
-  }).join('') || '<tr><td colspan="11" class="tempty">没有符合当前筛选条件的样本</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="tempty">没有符合当前筛选条件的样本</td></tr>';
 
   var pg = $('#sampPager');
   if (pg) {
@@ -9764,7 +9761,7 @@ function renderSampKpis() {
    顶栏白字同级，会把 4.9:1 的白字量成 1.0:1（误报成「白字压白底」）。
    顶栏也因此用 rect 而不是 path 画：探针只认 rect / circle。 */
 var LIN_COLNAME = {
-  subj: '队列个体', alias: '原始登记 ID', self: '样本源',
+  subj: '队列个体', alias: '原始登记 ID', self: '样本类型',
   frac: '分装样本', deriv: '衍生模型'
 };
 /* top = 顶栏色（null = 整卡浅底、无顶栏）；body = 卡身底色 */
@@ -10019,7 +10016,7 @@ function lineageRows(a) {
     var p = P[n.from], c = P[n.id];
     var fx = p.x + NW / 2, by = p.y + NH, ty = by + TRUNK, cx = c.x + NW / 2;
     /* 正交折线：父卡底边中点 → 干线 → 子卡顶边中点。父只有一个子且同列时
-       就是一条竖直直线（受试者 → 样本源那一层），不必绕出干线。 */
+       就是一条竖直直线（样本源 → 样本源那一层），不必绕出干线。 */
     out += '<path d="' + (Math.abs(fx - cx) < 0.6
         ? 'M' + fx + ' ' + by + ' V' + c.y
         : 'M' + fx + ' ' + by + ' V' + ty + ' H' + cx + ' V' + c.y)
@@ -10193,8 +10190,7 @@ var QC_LEVELS = [
   { v: '尚未质检', st: 'dim' }
 ];
 var CONSENT_STS = [
-  { v: '已签署', st: 'ok' }, { v: '待补签', st: 'warn' },
-  { v: '未签署', st: 'danger' }, { v: '已撤回', st: 'danger' }
+  { v: '是', st: 'ok' }, { v: '否', st: 'warn' }, { v: '未知', st: 'danger' }
 ];
 
 function levelSt(list, v) {
@@ -10243,7 +10239,7 @@ function fmtSize(b) {
 
 /* ---------- 样本信息：字段先并成一处，再分组 ----------
    字段有三个来源：
-     ① 顶层字段 —— 样本 ID / 受试者编号 / 采集物 / 采集时间 / 存放条件；
+     ① 顶层字段 —— 样本 ID / 样本源ID / 采集物 / 采集时间 / 存放条件；
      ② 派生 —— 分装与衍生数取自 lin，原始登记 ID 取自 lin 里的 alias 节点，
               所属项目取自 om（一个样本可以出现在多个项目里，所以是多个值）；
      ③ meta —— 临床、存储、质控、知情同意。
@@ -10263,7 +10259,7 @@ function sampFields(a, id) {
   return [
     { g: '标识信息', ic: 'fingerprint', rows: [
       ['样本 ID', id, ''],
-      ['受试者编号', a.subj || '——', tone(a.subj, '')],
+      ['样本源ID', a.subj || '——', tone(a.subj, '')],
       ['原始登记 ID', alias.length ? alias[0].t + '（已归并）' : '无别名', tone(alias.length, '')],
       ['所属队列', a.cohort || '——', tone(a.cohort, '')],
       ['所属项目', pjs.length ? pjs.join(' · ') : '尚未归属项目', tone(pjs.length, '')]
@@ -10301,7 +10297,7 @@ function sampFields(a, id) {
       ['质控结论', q.verdict || '尚未质检', q.st || 'dim']
     ] },
     { g: '知情同意与伦理', ic: 'file-shield', rows: [
-      ['知情同意状态', c.st || '未登记', c.st === '已签署' ? 'ok' : (c.st ? 'warn' : 'dim')],
+      ['知情同意状态', c.st || '未登记', c.st === '是' ? 'ok' : (c.st === '否' ? 'warn' : (c.st ? 'danger' : 'dim'))],
       ['伦理批件号', c.no || '——', tone(c.no, '')],
       ['签署日期', c.t || '——', tone(c.t, '')],
       ['用途限制', c.use || '未登记', tone(c.use, '')]
@@ -10400,7 +10396,7 @@ function openSampNew() {
     + '<div class="frmrow">'
     + '<div class="fld"><label class="fld__l" for="nsId">样本 ID ' + reqMark() + '</label>'
     + '<input class="inp" id="nsId" autocomplete="off" aria-required="true" placeholder="例如 S069"></div>'
-    + '<div class="fld"><label class="fld__l" for="nsSubj">受试者编号</label>'
+    + '<div class="fld"><label class="fld__l" for="nsSubj">样本源ID</label>'
     + '<input class="inp" id="nsSubj" autocomplete="off" placeholder="例如 SUBJ-0432"></div>'
     + '<div class="fld"><label class="fld__l" for="nsNo">队列例号</label>'
     + '<input class="inp" id="nsNo" autocomplete="off" placeholder="例如 第 69 例"></div>'
@@ -10414,6 +10410,10 @@ function openSampNew() {
     + '<div class="fld"><label class="fld__l" for="nsT">采集时间</label>'
     + '<input class="inp" id="nsT" autocomplete="off" placeholder="例如 2026-03-25"></div>'
     + fldSel('nsStore', '存放条件', optHTML(SAMP_STORES, '液氮 / -80 ℃'))
+    + '</div>'
+    + '<div class="frmrow">'
+    + fldInp('nsLoc', '存放位置', '', '例如 A 库 / 03 架 / 12 盒 / B4')
+    + fldSel('nsSrc', '数据来源', '<option>自创建</option>')
     + '</div>'
     + frmLegend()
     + '</div>',
@@ -10448,14 +10448,14 @@ function createSamp() {
   var subj = fv('#nsSubj'), no = fv('#nsNo');
   SAMP_ARCHIVE[id] = {
     cohort: fv('#nsCohort'), no: no, subj: subj, dx: fv('#nsDx'),
-    mat: fv('#nsMat'), t: fv('#nsT'), store: fv('#nsStore'),
+    mat: fv('#nsMat'), t: fv('#nsT'), store: fv('#nsStore'), src: '自创建',
     meta: { sex: '', age: '', stage: '', site: '', vol: '', proc: '',
-            loc: '', inAt: '', qc: {}, consent: {} },
+            loc: fv('#nsLoc'), inAt: '', qc: {}, consent: {} },
     docs: [],
-    /* 新样本的血缘只有两层：受试者 → 采集物。分装与衍生材料要到样本处理时才产生，
+    /* 新样本的血缘只有两层：样本源 → 采集物。分装与衍生材料要到样本处理时才产生，
        登记阶段就先编出几份来，等于替实验员记录了没发生过的事。 */
     lin: [
-      { id: subj || id + '-SUBJ', lv: 0, k: 'subj', t: '受试者',
+      { id: subj || id + '-SUBJ', lv: 0, k: 'subj', t: '样本源ID',
         s: (subj || '尚未分配编号') + (no ? ' · ' + no : '') },
       { id: id, lv: 1, k: 'self', t: id, s: fv('#nsMat'),
         from: subj || id + '-SUBJ' }
@@ -10488,7 +10488,7 @@ function openSampEdit() {
   showModal('编辑样本信息 · ' + SAMP_CUR,
     '<div class="stack">'
     + '<div class="frmrow">'
-    + fldInp('esSubj', '受试者编号', a.subj, '例如 SUBJ-0432')
+    + fldInp('esSubj', '样本源ID', a.subj, '例如 SUBJ-0432')
     + fldInp('esNo', '队列例号', a.no, '例如 第 37 例')
     + fldInp('esCohort', '所属队列', a.cohort, '')
     + '</div>'
@@ -10522,7 +10522,7 @@ function openSampEdit() {
     + fldSel('esVerdict', '质控结论', optPairs(QC_LEVELS, q.verdict || '尚未质检'))
     + '</div>'
     + '<div class="frmrow">'
-    + fldSel('esConsent', '知情同意状态', optPairs(CONSENT_STS, c.st || '未签署'))
+    + fldSel('esConsent', '知情同意状态', optPairs(CONSENT_STS, c.st || '否'))
     + fldInp('esCno', '伦理批件号', c.no, '例如 EC-TJ-2026-018')
     + fldInp('esCt', '签署日期', c.t, '例如 2026-03-12')
     + '</div>'
@@ -10551,7 +10551,7 @@ function saveSampEdit() {
     consent: { st: cv, no: fv('#esCno'), t: fv('#esCt'), use: fv('#esCuse') }
   };
 
-  /* 血缘节点上的受试者编号与采集物是从顶层字段派生的，必须跟着重写 ——
+  /* 血缘节点上的样本源ID与采集物是从顶层字段派生的，必须跟着重写 ——
      否则卡片上写着新编号，谱系图上还挂着旧的那个。 */
   var sub = a.lin.filter(function (n) { return n.k === 'subj'; })[0];
   if (sub) {
@@ -10581,7 +10581,7 @@ function openSampDocAdd() {
     '<div class="stack">'
     + '<div class="frmrow">'
     + fldSel('docKind', '资料类型', optHTML(DOC_KINDS, DOC_KINDS[0]))
-    + fldInp('docNote', '备注', '', '例如：受试者签署原件扫描件')
+    + fldInp('docNote', '备注', '', '例如：样本源签署原件扫描件')
     + '</div>'
     + '<div class="dz" id="docDz" data-doc-drop role="button" tabindex="0"'
     + ' aria-label="选择要归档的文件">'

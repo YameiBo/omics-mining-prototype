@@ -1705,11 +1705,11 @@ DRIVE = r"""
                        meta: txt(q('#sampListMeta')),
                        qc: q('#fltQc').value, om: q('#fltOm').value };
 
-    /* 排序：点「资料」列头两次，验单调 + 表头高亮 */
-    q('#sampTbl [data-samp-sort="docs"]').click(); await sleep(200);
-    const dAsc = qa('#sampTbody tr.samptr').map(r => parseInt(r.children[9].textContent, 10));
-    q('#sampTbl [data-samp-sort="docs"]').click(); await sleep(200);
-    const dDesc = qa('#sampTbody tr.samptr').map(r => parseInt(r.children[9].textContent, 10));
+    /* 排序：点「采集日期」列头两次，验单调 + 表头高亮 */
+    q('#sampTbl [data-samp-sort="t"]').click(); await sleep(200);
+    const dAsc = qa('#sampTbody tr.samptr').map(r => r.children[3].textContent.trim());
+    q('#sampTbl [data-samp-sort="t"]').click(); await sleep(200);
+    const dDesc = qa('#sampTbody tr.samptr').map(r => r.children[3].textContent.trim());
     R.sampSort = { asc: dAsc, desc: dDesc,
                    ascOk: dAsc.every((v, i) => i === 0 || dAsc[i-1] <= v),
                    descOk: dDesc.every((v, i) => i === 0 || dDesc[i-1] >= v),
@@ -1968,7 +1968,7 @@ DRIVE = r"""
     q('#esLoc').value = 'B 库 / 01 架 / 02 盒 / A1';
     q('#esRin').value = '7.4';
     q('#esVerdict').value = '合格';
-    q('#esConsent').value = '已签署';
+    q('#esConsent').value = '是';
     q('#esCuse').value = '仅限本课题研究';
     q('[data-samp-edit-submit]').click(); await sleep(460);
     R.sampEditDone = {
@@ -5811,7 +5811,7 @@ try:
     # ---- 血缘谱系：横向「层级 = 列」布局（本节取代原纵向四层）----
     _ll = d['linLayout']
     need('血缘按层级排成 4 列、列名由数据现算',
-         _ll['heads'] == ['队列个体', '样本源', '分装样本', '衍生模型']
+         _ll['heads'] == ['队列个体', '样本类型', '分装样本', '衍生模型']
          and len(_ll['colsX']) == 4, {'heads': _ll['heads'], 'x': _ll['colsX']})
     # 列 x 坐标不写死具体值：它等于 ci*列宽 + 居中偏移，只要「等间距」成立即可，
     # 改列宽时不必回来改断言。
@@ -5925,7 +5925,7 @@ try:
          and min(_cv['g'], _cv['t'], _cv['p']) == _cv['all']
          and _cv['n'] >= _cv['g'], _cv)
     _sl = d['sampList']
-    need('列表每页 15 行 · 11 个维度列',  _sl['rows'] == 15 and _sl['cols'] == 11, _sl)
+    need('列表每页 15 行 · 8 个维度列',  _sl['rows'] == 15 and _sl['cols'] == 8, _sl)
     need('列表首行是 S001（按 ID 排）',    _sl['first'] == 'S001', _sl['first'])
     need('组学覆盖三个字标 · 首例全产出',  _sl['omtags'] == 3 and _sl['omOn'] == 3, _sl)
     need('分页器报出 15 / 75',            '共 75 条' in _sl['pager']
@@ -6010,10 +6010,10 @@ try:
          _si['titles'])
     # 字段值必须逐条核对：只数个数的话，整张字段表漂了而个数照样是对的
     need('信息卡字段来自顶层字段（不是另存的一份）',
-         _f.get('样本 ID') == 'S037' and _f.get('受试者编号') == 'SUBJ-0371'
+         _f.get('样本 ID') == 'S037' and _f.get('样本源ID') == 'SUBJ-0371'
          and _f.get('采集物') == '肝组织 + 外周血' and _f.get('采集时间') == '2026-03-14'
          and _f.get('存放条件') == '液氮 / -80 ℃',
-         dict((k, _f.get(k)) for k in ['样本 ID', '受试者编号', '采集物', '采集时间', '存放条件']))
+         dict((k, _f.get(k)) for k in ['样本 ID', '样本源ID', '采集物', '采集时间', '存放条件']))
     need('分装 / 衍生数取自血缘谱系',    _si['splitDeriv']['v'] == '2 份分装 · 3 份衍生', _si['splitDeriv'])
     need('所属项目取自跨组学记录',       _si['projects']['v'] == 'P-2026-001 · P-2026-013', _si['projects'])
     need('无别名样本明说「无别名」',      _si['alias']['v'] == '无别名', _si['alias'])
@@ -6033,7 +6033,7 @@ try:
          and d['sampAlias']['nodes'] == 5
          and d['sampAlias']['edges'] == d['sampAlias']['nodes'] - 1, d['sampAlias'])
     need('血缘列数随数据增减（S068 多一层「原始登记 ID」）',
-         d['sampAlias']['heads'] == ['队列个体', '原始登记 ID', '样本源', '分装样本'],
+         d['sampAlias']['heads'] == ['队列个体', '原始登记 ID', '样本类型', '分装样本'],
          d['sampAlias']['heads'])
 
     _d0 = d['sampDocs0']
@@ -6151,7 +6151,7 @@ try:
     need('编辑保存后卡片上是真新值（不只看 toast）',
          _ed['modal'] and _ed['stage']['v'] == 'II 期'
          and _ed['loc']['v'] == 'B 库 / 01 架 / 02 盒 / A1'
-         and _ed['rin']['v'] == 'RIN 7.4' and _ed['consent']['v'] == '已签署'
+         and _ed['rin']['v'] == 'RIN 7.4' and _ed['consent']['v'] == '是'
          and _ed['use']['v'] == '仅限本课题研究',
          dict((k, _ed[k]['v']) for k in ['stage', 'loc', 'rin', 'consent', 'use']))
     need('质控结论的状态色由结论值反查（选「合格」→ is-ok）',

@@ -1734,9 +1734,8 @@ var QUEUE_JOBS = 3;   /* 队列中已有的任务数：为 0 时提交即直接�
    （任务运行页，队列非空）。v37 删掉样本对齐页后，缺失率与样本量两条告警
    随该页一起退场 —— 留着一个没有宿主的告警状态只会变成死代码。 */
 function syncAnoms() {
-  var page = currentPage();
-  hideAnom('#anomP06');
-  if (page === 'p06' && CTX.queued > 0) showAnom('queue');
+  /* v63：任务运行页不再展示「算力队列」与「系统检测到的问题」——
+     排队态只保留一句「请等待」。数据汇集页的格式告警仍由 showAnom 直接触发。 */
 }
 
 function hideAnom(sel) {
@@ -1963,11 +1962,15 @@ function submitRun() {
   CTX.queued = QUEUE_JOBS + 1;
   var tag = $('#runTag');
   if (tag) { tag.className = 'tag tag--warn'; tag.innerHTML = ico('hourglass-half') + '排队中'; }
-  var b = $('#btnRun'); if (b) b.setAttribute('aria-disabled', 'true');
-  var c = $('#btnCancel'); if (c) c.removeAttribute('aria-disabled');
+  /* 排队态只显示「请等待」——不再展示队列位次、预计耗时等细节（v63）。 */
+  var stageT = $('#runStageText'); if (stageT) stageT.textContent = '请等待';
+  var stageV = $('#stageV'); if (stageV) stageV.textContent = '请等待';
+  var b = $('#btnRun');
+  if (b) { b.removeAttribute('aria-disabled'); b.innerHTML = ico('play') + '开始执行'; }
+  var c = $('#btnCancel'); if (c) c.setAttribute('aria-disabled', 'true');
   var r = $('#btnResult'); if (r) r.setAttribute('aria-disabled', 'true');
   syncAnoms();
-  toast('任务 T-2409-018 已提交，前方还有 ' + QUEUE_JOBS + ' 个任务', 'warn');
+  toast('任务已提交，请等待', 'warn');
 }
 
 function startRun() {
@@ -1996,19 +1999,11 @@ function startRun() {
     stageT.textContent = finished ? '全部阶段已完成' : ('正在' + st.name + '…');
     stageV.textContent = st.short;
     syncPipe(p, si);
-    /* 队列位置与脚注必须同步：位置 1 对应「前方 0 个任务」，跑完显示已开始执行 */
-    var q = Math.max(1, 3 - Math.floor(p / 34));
-    var qe = $('#qPos'); if (qe) qe.textContent = finished ? '—' : String(q);
-    var qf = $('#qPosF'); if (qf) qf.textContent = finished ? '已开始执行' : ('前方 ' + (q - 1) + ' 个任务');
-    var eta = Math.max(0, Math.round(252 * (1 - p / 100)));
-    var etaV = $('#etaV'); if (etaV) etaV.textContent = Math.floor(eta / 60) + ':' + String(eta % 60).padStart(2, '0');
     while (logIdx < RUN_LOGS.length && p >= RUN_LOGS[logIdx][0]) { logLine(RUN_LOGS[logIdx][0], RUN_LOGS[logIdx][1], RUN_LOGS[logIdx][2]); logIdx++; }
 
     if (p >= 100) {
       clearInterval(runTimer); runTimer = null;
       tag.className = 'tag tag--ok'; tag.innerHTML = ico('circle-check') + '已完成';
-      /* 任务已结束，p06 的「算力排队中」告警不再成立，收起以免与"已完成"并列自相矛盾 */
-      var ah = $('#anomP06'); if (ah) ah.hidden = true;
       $('#btnResult').removeAttribute('aria-disabled');
       $('#btnCancel').setAttribute('aria-disabled', 'true');
       $('#btnRun').removeAttribute('aria-disabled');
@@ -2167,22 +2162,6 @@ function renderRunMetaBar() {
       + ' · 参考基因组 ' + r.n + '（' + r.alias + '，自动回填）'
       + (RUNMETA.cond ? ' · 实验条件：' + RUNMETA.cond : '');
   }
-}
-
-function fillQueue() {
-  var host = $('#queueList');
-  if (!host) return;
-  var rows = [
-    ['1', 'T-2409-020 代谢组分析', '等待中 · 队列第 1 位', false],
-    ['2', 'T-2409-019 蛋白组定量', '等待中 · 队列第 2 位', false],
-    ['3', 'T-2409-018 差异表达分析（我的）', '运行中', true],
-    ['4', 'T-2409-014 全基因组变异注释', '等待中 · 队列第 4 位', false]
-  ];
-  host.innerHTML = rows.map(function (r) {
-    return '<div class="qrow"><span class="qpos' + (r[3] ? ' qpos--me' : '') + '">' + r[0] + '</span>'
-      + '<div class="min-w-0 flex-1"><div class="truncate">' + r[1] + '</div>'
-      + '<div class="text-[11.5px] text-ink3">' + r[2] + '</div></div></div>';
-  }).join('');
 }
 
 /* ============================================================
@@ -4054,6 +4033,8 @@ document.addEventListener('click', function (e) {
 
   /* 运行 */
   if ((t = e.target.closest('[data-run]'))) {
+    /* v63：排队态再点一次「开始执行」就直接开跑（排队提示只剩「请等待」）。 */
+    if (CTX.queued > 0) { CTX.queued = 0; startRun(); return; }
     goto('p06');
     setTimeout(function () {
       /* 队列里还有任务就先排队：排队是提交的结果，不是一个开关 */
@@ -11783,7 +11764,6 @@ function initKbFrames() {
    ============================================================ */
 function init() {
   fillTables();
-  fillQueue();
   renderPipe();
   renderStepper();
   $$('.chartbox').forEach(renderChart);

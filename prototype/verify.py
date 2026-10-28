@@ -628,14 +628,15 @@ DRIVE = r"""
     q('#anomP02 [data-fix="0"]').click(); await sleep(260);
     R.anomFixed = txt(q('#anomP02 .alert__t')).slice(0, 40);
 
-    /* ---- 算力排队：提交即入队，不再有专门的触发按钮 ---- */
+    /* ---- 排队态（v63）：只显示「请等待」，不再有算力队列 / 问题模块 ---- */
     window.__goRaw('p06'); await sleep(220);
     q('#btnRun').click(); await sleep(460);
     R.queueAnom = {
-      visible: !q('#anomP06').hidden,
-      disabledBtns: qa('#anomP06 [aria-disabled="true"]').length,
-      hasNote: !!q('#anomP06 [style*="8A6A32"]'),
-      runTag: txt(q('#runTag'))
+      anomGone: !q('#anomP06'),
+      queueGone: !q('#queueList'),
+      qPosGone: !q('#qPos') && !q('#etaV'),
+      runTag: txt(q('#runTag')),
+      stageText: txt(q('#runStageText'))
     };
     /* v51：排队态点「查看结果」必须被拦住，而且**不能跳页**。
        这道闸搬过两次家（[data-go] → [data-pano] → [data-res]），每搬一次都要确认
@@ -646,7 +647,7 @@ DRIVE = r"""
     R.queueAnom.guardToast = lastToast();
 
     /* ---- 运行模拟：从排队引导里走「降级快速模式」，任务真的跑起来 ---- */
-    q('#anomP06 [data-fix="1"]').click();
+    q('#btnRun').click();
     await sleep(1300);
     /* 流水线三态：这 1.3 秒里应该已经「前面完成、当步运行中、后面等待」——
        只断「最后全绿」是不够的：那样一个从头到尾都不变的流水线也能通过。 */
@@ -687,7 +688,7 @@ DRIVE = r"""
     /* ---- 取消任务：跑起来之后再取消，流水线不能留着「运行中」的节点 ----
        任务标签此时写「已取消」，节点若还亮着百分比，就是同一屏上的两句矛盾话。 */
     q('#btnRun').click(); await sleep(260);
-    q('#anomP06 [data-fix="1"]').click(); await sleep(900);
+    q('#btnRun').click(); await sleep(900);
     R.runCancel = {
       runBefore: qa('#pipeFlow [data-stage][data-pipe-state="run"]').length,
       doneBefore: qa('#pipeFlow [data-stage][data-pipe-state="done"]').length
@@ -698,7 +699,7 @@ DRIVE = r"""
     R.runCancel.doneAfter = qa('#pipeFlow [data-stage][data-pipe-state="done"]').length;
     /* 取消之后再跑一次，把「结果页」那一段需要的前置状态补回来 */
     q('#btnRun').click(); await sleep(260);
-    q('#anomP06 [data-fix="1"]').click(); await sleep(7600);
+    q('#btnRun').click(); await sleep(7600);
     R.runAgain = { pct: txt(q('#runPctText')), tag: txt(q('#runTag')) };
 
     /* ---- 结果页：6 个视图 + 图表 ----
@@ -4034,7 +4035,7 @@ DRIVE = r"""
     R.wbAgent = {
       p01Cards: wbCards,
       queueGone: wbCards.indexOf('算力队列') < 0,
-      queueKept: !!q('#queueList'),                       /* p06 的算力队列卡仍在 DOM */
+      p06QueueGone: !q('#queueList'),
       msgsDelta: qa('#wbAgentBody .msg').length - wbMsgs0,/* 期望 +2（问 + 答） */
       msgs0: wbMsgs0,
       chips: qa('#wbAgentQs .qchip').length,
@@ -5176,7 +5177,7 @@ try:
          "window.scrollTo(0,0);"
          "setTimeout(function(){ var b = document.querySelector('#btnRun'); if (b) b.click(); },140);"
          "setTimeout(function(){"
-         "var f = document.querySelector('#anomP06 [data-fix=\"1\"]'); if (f) f.click();"
+         "var b2 = document.querySelector('#btnRun'); if (b2) b2.click();"
          "window.scrollTo(0,0);"
          "},460);"
          "})()")
@@ -7147,7 +7148,7 @@ try:
     wb = d['wbAgent']
     need('工作台已无算力队列卡（p01 卡片清单）',
          wb['queueGone'] and '问答交互' in wb['p01Cards'], wb['p01Cards'])
-    need('提交流程页的算力队列仍在（只让位工作台）', wb['queueKept'] is True, wb['queueKept'])
+    need('任务运行页的算力队列卡也已撤除', wb['p06QueueGone'] is True, wb['p06QueueGone'])
     need('工作台问答卡结构齐全（6 快捷问题/输入框/发送）',
          wb['msgsDelta'] == 2 and wb['chips'] == 6 and wb['sendBtn'], wb)
     need('工作台快捷提问出答案（会话唯一宿主即问答卡，v53）',
@@ -7734,9 +7735,11 @@ try:
          '流程模板' in (_pd['toast'] or '') and '样本对齐' not in (_pd['toast'] or ''), _pd['toast'])
 
     _q = d['queueAnom'];
-    need('提交即入队且排队态写进标签',   _q['visible'] and '排队' in _q['runTag'], _q)
-    need('权限不足的动作仍置灰并说明',   _q['disabledBtns'] == 1 and _q['hasNote'], _q)
-    need('降级快速模式真把任务跑起来',   d['runMid']['pct'] != '0%' and d['runMid']['pct'] != '', d['runMid'])
+    need('排队态只显示「请等待」，无问题模块 / 算力队列 / 队列位次',
+         _q['anomGone'] and _q['queueGone'] and _q['qPosGone']
+         and '排队' in _q['runTag'] and _q['stageText'] == '请等待', _q)
+    need('再点「开始执行」任务真的跑起来',
+         d['runMid']['pct'] != '0%' and d['runMid']['pct'] != '', d['runMid'])
 
     # ---------- 任务流水线（阶段进度的唯一出口） ----------
     _rm = d['runMid']

@@ -1074,21 +1074,6 @@
 
       <div class="mrow mb-4">
         <div class="mcell">
-          <div class="mcell__l">
-            <span class="term">队列位置
-              <i class="fa-solid fa-circle-question term__i"></i>
-              <span class="term__p">任务在算力队列中的排位。数字越小越先执行，位置 1 表示下一个就轮到。</span>
-            </span>
-          </div>
-          <div class="mcell__v" id="qPos">3</div>
-          <div class="mcell__f" id="qPosF">前方 2 个任务</div>
-        </div>
-        <div class="mcell">
-          <div class="mcell__l">预计剩余耗时</div>
-          <div class="mcell__v" id="etaV">4:12</div>
-          <div class="mcell__f">基于同规模历史任务中位数</div>
-        </div>
-        <div class="mcell">
           <div class="mcell__l">当前进度</div>
           <div class="mcell__v" id="pctV">0<span class="mcell__u">%</span></div>
           <div class="mcell__f" id="stageV">等待调度</div>
@@ -1139,11 +1124,6 @@
             </div>
           </div>
 
-          <div class="card" id="anomP06" hidden>
-            <div class="card__hd"><span class="card__t">系统检测到的问题</span></div>
-            <div class="card__bd" id="anomP06Body"></div>
-          </div>
-
         </div>
 
         <div class="stack">
@@ -1160,11 +1140,6 @@
               <button class="btn btn--sm btn--quiet" data-dl="runlog"><i class="fa-solid fa-download ico"></i>导出日志</button>
               <span class="text-[12px] text-ink3">最近 <span class="num">200</span> 行</span>
             </div>
-          </div>
-
-          <div class="card">
-            <div class="card__hd"><span class="card__t">算力队列</span><span class="tag" id="queueCount">3 个任务</span></div>
-            <div class="card__bd" id="queueList"></div>
           </div>
         </div>
       </div>

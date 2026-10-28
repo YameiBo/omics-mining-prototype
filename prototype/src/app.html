@@ -2243,7 +2243,6 @@
           <div class="card__hd">
             <span class="card__t">样本信息</span>
             <span class="card__d" id="sampInfoMeta">—</span>
-            <button type="button" class="btn btn--sm ml-auto" data-samp-edit><i class="fa-solid fa-pen-to-square ico"></i>编辑信息</button>
           </div>
           <div class="card__bd" id="sampInfo"></div>
         </div>
@@ -2290,34 +2289,8 @@
               <!-- 这张表必须有 id：同一个面板里还有「样本资料」那张表，
                    按 #sampPanel 数 thead th 会把两张一起数进去（7 变 14）。 -->
               <table class="tbl" id="omTbl">
-                <thead><tr><th>组学</th><th>测序材料（血缘节点）</th><th>所属项目</th><th>产出文件</th><th>参考基因组</th><th class="num">产出时间</th><th class="wid">操作</th></tr></thead>
+                <thead><tr><th>组学</th><th>测序材料（血缘节点）</th><th>所属项目</th><th>分析项目名称</th><th>参考基因组</th><th class="num">创建时间</th><th class="wid">操作</th></tr></thead>
                 <tbody id="omBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ⑤ 样本资料。组学数据在系统里，资料原件在这里 —— 知情同意书、病理报告、
-               质检报告这些东西不参与分析，但它们是样本能否合规使用的凭据，所以照样
-               挂在同一个唯一 ID 下。条目由 renderSampDocs() 现算，不在这里写死。 -->
-        <div class="card" id="sampDocCard">
-          <div class="card__hd">
-            <span class="card__t">样本资料</span>
-            <span class="card__d" id="docMeta">—</span>
-            <button type="button" class="btn btn--sm btn--primary ml-auto" data-samp-doc-add><i class="fa-solid fa-folder-open ico"></i>归档资料</button>
-          </div>
-          <div class="card__bd pt-0">
-            <div class="tblwrap">
-              <table class="tbl" id="docTbl">
-                <!-- 列宽由 colgroup 定：7 列在 840px 抽屉里排得下，不能让浏览器按内容
-                     抢宽 —— 备注列被挤到 40px 时中文会一字一行，行高被撑到 110px+。
-                     「文件名」留 auto：窄屏先压缩它（省略号），其余列保持定宽。 -->
-                <colgroup>
-                  <col class="c-k"><col class="c-n"><col class="c-s"><col class="c-w">
-                  <col class="c-t"><col class="c-note"><col class="c-o">
-                </colgroup>
-                <thead><tr><th>资料类型</th><th>文件名</th><th class="num">大小</th><th>归档人</th><th class="num">归档时间</th><th>备注</th><th class="wid">操作</th></tr></thead>
-                <tbody id="docBody"></tbody>
               </table>
             </div>
           </div>

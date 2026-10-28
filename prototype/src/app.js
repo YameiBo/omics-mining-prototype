@@ -9124,7 +9124,7 @@ function agentConfirm(q) {
    手写 75 份只会让真正有内容的那 4 例淹没在重复里。 */
 var SAMP_FULL = {
   S037: {
-    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '自创建',
+    cohort: 'TJ-TCM-2026', no: '第 37 例', subj: 'SUBJ-0371', dx: '肝细胞癌', src: '手动登记',
     mat: '肝组织 + 外周血', t: '2026-03-14', store: '液氮 / -80 ℃',
     /* meta / docs 只补**不能从别处派生**的东西。样本 ID、样本源ID、
        采集物、采集时间、存放条件仍是上面的顶层字段；分装与衍生数取自 lin、
@@ -9149,7 +9149,7 @@ var SAMP_FULL = {
       { k: '采集与处理记录', n: 'S037_采集处理记录.xlsx', sz: '38 KB', who: '张岚', t: '2026-03-14 11:05', note: '采集到液氮入库全过程' }
     ],
     lin: [
-      { id: 'SUBJ-0371', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0371 · 队列第 37 例' },
+      { id: 'SUBJ-0371', lv: 0, k: 'subj', t: '样本源', s: 'SUBJ-0371' },
       { id: 'S037', lv: 1, k: 'self', t: 'S037', s: '肝组织 + 外周血', from: 'SUBJ-0371' },
       { id: 'S037-L', lv: 2, k: 'frac', t: 'S037-L', s: '肝组织块 · 液氮', from: 'S037', via: '分装' },
       { id: 'S037-B', lv: 2, k: 'frac', t: 'S037-B', s: '血浆分装 · 3 管', from: 'S037', via: '分装' },
@@ -9164,7 +9164,7 @@ var SAMP_FULL = {
     ]
   },
   S068: {
-    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌', src: '自创建',
+    cohort: 'TJ-TCM-2026', no: '第 68 例', subj: 'SUBJ-0429', dx: '肝细胞癌', src: '手动登记',
     mat: '肝组织 + 外周血', t: '2026-03-19', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 63, stage: 'II 期', site: '肝左叶 S3 段',
@@ -9186,7 +9186,7 @@ var SAMP_FULL = {
     /* 这一条的看点全在血缘上：原始登记 ID 少写一位校验位，靠 ID 映射归并到
        S068 之后，两路组学才认回同一个人 —— 唯一 ID 的价值在这里最直白。 */
     lin: [
-      { id: 'SUBJ-0429', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0429 · 队列第 68 例' },
+      { id: 'SUBJ-0429', lv: 0, k: 'subj', t: '样本源', s: 'SUBJ-0429' },
       { id: 'S068A', lv: 1, k: 'alias', t: 'S068A', s: '原始登记 ID · 采集物', from: 'SUBJ-0429' },
       { id: 'S068', lv: 2, k: 'self', t: 'S068', s: '归并后唯一 ID', from: 'S068A', via: 'ID 映射' },
       { id: 'S068-L', lv: 3, k: 'frac', t: 'S068-L', s: '肝组织块 · 液氮', from: 'S068', via: '分装' },
@@ -9199,7 +9199,7 @@ var SAMP_FULL = {
     ]
   },
   S004: {
-    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌', src: '自创建',
+    cohort: 'TJ-TCM-2026', no: '第 4 例', subj: 'SUBJ-0031', dx: '肝细胞癌', src: '手动登记',
     mat: '肝组织 + 外周血', t: '2026-03-11', store: '液氮 / -80 ℃',
     meta: {
       sex: '男', age: 55, stage: 'IIIb 期', site: '肝右叶 S7 段',
@@ -9221,7 +9221,7 @@ var SAMP_FULL = {
       { k: '样本质检报告', n: 'S004_质检_血浆不合格.pdf', sz: '248 KB', who: '王倩', t: '2026-03-18 09:40', note: '血浆中度溶血，蛋白组建库未通过；组织 DNA / RNA 合格' }
     ],
     lin: [
-      { id: 'SUBJ-0031', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0031 · 队列第 4 例' },
+      { id: 'SUBJ-0031', lv: 0, k: 'subj', t: '样本源', s: 'SUBJ-0031' },
       { id: 'S004', lv: 1, k: 'self', t: 'S004', s: '肝组织 + 外周血', from: 'SUBJ-0031' },
       { id: 'S004-L', lv: 2, k: 'frac', t: 'S004-L', s: '肝组织块 · 液氮', from: 'S004', via: '分装' }
     ],
@@ -9232,7 +9232,7 @@ var SAMP_FULL = {
     ]
   },
   S052: {
-    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌', src: '自创建',
+    cohort: 'TJ-TCM-2026', no: '第 52 例', subj: 'SUBJ-0164', dx: '肝细胞癌', src: '手动登记',
     mat: '肝组织 + 外周血', t: '2026-03-21', store: '液氮 / -80 ℃',
     meta: {
       sex: '女', age: 49, stage: 'IV 期', site: '肝右叶 + 门静脉癌栓',
@@ -9252,7 +9252,7 @@ var SAMP_FULL = {
       { k: '采集与处理记录', n: 'S052_采集处理记录.xlsx', sz: '34 KB', who: '张岚', t: '2026-03-21 10:40', note: '采集到液氮入库全过程' }
     ],
     lin: [
-      { id: 'SUBJ-0164', lv: 0, k: 'subj', t: '样本源ID', s: 'SUBJ-0164 · 队列第 52 例' },
+      { id: 'SUBJ-0164', lv: 0, k: 'subj', t: '样本源', s: 'SUBJ-0164' },
       { id: 'S052', lv: 1, k: 'self', t: 'S052', s: '肝组织 + 外周血', from: 'SUBJ-0164' },
       { id: 'S052-L', lv: 2, k: 'frac', t: 'S052-L', s: '肝组织块 · 液氮', from: 'S052', via: '分装' }
     ],
@@ -9347,7 +9347,7 @@ function genSamp(i) {
     note: '已出库 ' + (1 + r(3)) + ' 次，按审批单执行' });
 
   var lin = [
-    { id: subj, lv: 0, k: 'subj', t: '样本源ID', s: subj + ' · 队列第 ' + i + ' 例' },
+    { id: subj, lv: 0, k: 'subj', t: '样本源', s: subj },
     { id: id, lv: 1, k: 'self', t: id, s: '肝组织 + 外周血', from: subj },
     { id: id + '-L', lv: 2, k: 'frac', t: id + '-L', s: '肝组织块 · 液氮', from: id, via: '分装' },
     { id: id + '-B', lv: 2, k: 'frac', t: id + '-B', s: '血浆分装 · ' + (2 + r(3)) + ' 管', from: id, via: '分装' }
@@ -9733,15 +9733,9 @@ function renderSampKpis() {
      不能让「队列 X ·  · SUBJ-Y」这种空档留在卡片上。 */
   box.innerHTML =
       mcellOf('样本 ID', SAMP_CUR, '',
-              [a.cohort, a.no, a.subj].filter(Boolean).join(' · ') || '尚未登记队列信息', 'id')
-    + mcellOf('采集物', a.mat, '',
-              (a.t ? a.t + ' 采集' : '采集时间未登记') + (a.store ? ' · ' + a.store : ''), 'mat')
-    + mcellOf('衍生样本', String(dv), '份',
-              frac ? '另有 ' + frac + ' 份分装材料' : '尚无分装与衍生材料', 'derive')
-    + mcellOf('关联组学', String(done.length), '路',
-              done.length
-                ? names + (a.om.length > done.length ? ' · ' + (a.om.length - done.length) + ' 路缺失' : '')
-                : '尚未在任何项目中产出组学数据', 'om');
+              [a.cohort, a.no].filter(Boolean).join(' · ') || '尚未登记队列信息', 'id')
+    + mcellOf('样本源ID', a.subj || '——', '',
+              '数据来源：' + (a.src || '系统'), 'subj');
 }
 
 /* ---------- 血缘谱系图（横向四列，v23） ----------
@@ -9761,7 +9755,7 @@ function renderSampKpis() {
    顶栏白字同级，会把 4.9:1 的白字量成 1.0:1（误报成「白字压白底」）。
    顶栏也因此用 rect 而不是 path 画：探针只认 rect / circle。 */
 var LIN_COLNAME = {
-  subj: '队列个体', alias: '原始登记 ID', self: '样本类型',
+  subj: '样本源', alias: '原始登记 ID', self: '样本类型',
   frac: '分装样本', deriv: '衍生模型'
 };
 /* top = 顶栏色（null = 整卡浅底、无顶栏）；body = 卡身底色 */
@@ -10139,7 +10133,7 @@ function renderOmics() {
       + '<td><button type="button" class="lnlink" data-linnode="' + esc(x.n) + '"'
       + ' title="只看 ' + esc(x.n) + ' 贡献的组学记录">' + esc(x.n) + '</button></td>'
       + '<td><span class="projlink">' + esc(x.pj) + '</span></td>'
-      + '<td class="text-[11.5px]">' + esc(x.f) + ' · ' + esc(x.sz) + '</td>'
+      + '<td class="text-[11.5px]">' + esc((projById(x.pj) || {}).n || x.pj) + '</td>'
       + '<td>' + esc(x.ref) + '</td>'
       + '<td class="num nw">' + x.t + '</td>'
       + '<td class="wid"><button type="button" class="btn btn--sm" data-om-open="' + esc(x.pj) + '">'
@@ -10260,22 +10254,20 @@ function sampFields(a, id) {
     { g: '标识信息', ic: 'fingerprint', rows: [
       ['样本 ID', id, ''],
       ['样本源ID', a.subj || '——', tone(a.subj, '')],
-      ['原始登记 ID', alias.length ? alias[0].t + '（已归并）' : '无别名', tone(alias.length, '')],
+      ['数据来源', a.src || '系统', ''],
       ['所属队列', a.cohort || '——', tone(a.cohort, '')],
       ['所属项目', pjs.length ? pjs.join(' · ') : '尚未归属项目', tone(pjs.length, '')]
     ] },
     { g: '临床信息', ic: 'stethoscope', rows: [
       ['疾病诊断', a.dx || '——', tone(a.dx, '')],
-      ['临床分期', m.stage || '——', tone(m.stage, '')],
       ['性别 / 年龄', (m.sex || '——') + ' · ' + (m.age ? m.age + ' 岁' : '——'), ''],
-      ['取材部位', m.site || '——', tone(m.site, '')],
-      ['队列例号', a.no || '——', tone(a.no, '')]
+      ['取材部位', m.site || '——', tone(m.site, '')]
     ] },
     { g: '采集与处理', ic: 'vial', rows: [
-      ['采集物', a.mat || '——', tone(a.mat, '')],
+      ['样本类型', a.mat || '——', tone(a.mat, '')],
       ['采集时间', a.t || '——', tone(a.t, '')],
-      ['采集量', m.vol || '——', tone(m.vol, '')],
-      ['处理方式', m.proc || '——', tone(m.proc, '')]
+      ['初始容量', m.vol || '——', tone(m.vol, '')],
+      ['添加剂', m.proc || '——', tone(m.proc, '')]
     ] },
     { g: '存储与位置', ic: 'box-archive', rows: [
       ['存放条件', a.store || '——', tone(a.store, '')],
@@ -10285,23 +10277,6 @@ function sampFields(a, id) {
       ['入库时间', m.inAt || '——', tone(m.inAt, '')],
       ['分装 / 衍生', frac + ' 份分装 · ' + deriv + ' 份衍生', (frac + deriv) ? '' : 'dim']
     ] },
-    { g: '质控信息', ic: 'clipboard-check', rows: [
-      ['DNA 浓度', q.dnaC || '——', tone(q.dnaC, '')],
-      ['DNA 纯度', q.dnaP || '——', tone(q.dnaP, '')],
-      /* RIN 低于 5 就是降解到不能建库了 —— 这是转录组做不出来的直接原因，
-         所以它不该和普通数字用同一种颜色。
-         标签不带「组织」二字：分组标题已经限定了是这一份样本，加了就撑破列宽。 */
-      ['RNA 完整性', q.rin ? 'RIN ' + q.rin : '——',
-        q.rin ? ((!isNaN(rin) && rin < 5) ? 'warn' : '') : 'dim'],
-      ['血浆 / 血清状态', q.plasma || '——', badPlasma ? 'warn' : tone(q.plasma, '')],
-      ['质控结论', q.verdict || '尚未质检', q.st || 'dim']
-    ] },
-    { g: '知情同意与伦理', ic: 'file-shield', rows: [
-      ['知情同意状态', c.st || '未登记', c.st === '是' ? 'ok' : (c.st === '否' ? 'warn' : (c.st ? 'danger' : 'dim'))],
-      ['伦理批件号', c.no || '——', tone(c.no, '')],
-      ['签署日期', c.t || '——', tone(c.t, '')],
-      ['用途限制', c.use || '未登记', tone(c.use, '')]
-    ] }
   ];
 }
 
@@ -10413,7 +10388,7 @@ function openSampNew() {
     + '</div>'
     + '<div class="frmrow">'
     + fldInp('nsLoc', '存放位置', '', '例如 A 库 / 03 架 / 12 盒 / B4')
-    + fldSel('nsSrc', '数据来源', '<option>自创建</option>')
+    + fldSel('nsSrc', '数据来源', '<option>手动登记</option>')
     + '</div>'
     + frmLegend()
     + '</div>',
@@ -10448,15 +10423,15 @@ function createSamp() {
   var subj = fv('#nsSubj'), no = fv('#nsNo');
   SAMP_ARCHIVE[id] = {
     cohort: fv('#nsCohort'), no: no, subj: subj, dx: fv('#nsDx'),
-    mat: fv('#nsMat'), t: fv('#nsT'), store: fv('#nsStore'), src: '自创建',
+    mat: fv('#nsMat'), t: fv('#nsT'), store: fv('#nsStore'), src: '手动登记',
     meta: { sex: '', age: '', stage: '', site: '', vol: '', proc: '',
             loc: fv('#nsLoc'), inAt: '', qc: {}, consent: {} },
     docs: [],
     /* 新样本的血缘只有两层：样本源 → 采集物。分装与衍生材料要到样本处理时才产生，
        登记阶段就先编出几份来，等于替实验员记录了没发生过的事。 */
     lin: [
-      { id: subj || id + '-SUBJ', lv: 0, k: 'subj', t: '样本源ID',
-        s: (subj || '尚未分配编号') + (no ? ' · ' + no : '') },
+      { id: subj || id + '-SUBJ', lv: 0, k: 'subj', t: '样本源',
+        s: (subj || '尚未分配编号') },
       { id: id, lv: 1, k: 'self', t: id, s: fv('#nsMat'),
         from: subj || id + '-SUBJ' }
     ],

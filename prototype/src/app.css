@@ -514,6 +514,7 @@
 #sampKpis .mcell--mat    { --tone-body: #EDF2F8; --tone-bar: #4A6D93; --tone-ink: #3B5B7E; }
 #sampKpis .mcell--derive { --tone-body: #E6F3F4; --tone-bar: #14808F; --tone-ink: #0E6E7A; }
 #sampKpis .mcell--om     { --tone-body: #F1EBFB; --tone-bar: #7C3FD0; --tone-ink: #6B2FBE; }
+#sampKpis .mcell--subj   { --tone-body: #F1EBFB; --tone-bar: #7C3FD0; --tone-ink: #6B2FBE; }
 
 /* 「说明条」样式（.note / .note__k / .pubnote）已随全站解释性文案一并移除 ——
    界面只讲「是什么」，不讲「为什么这么设计」；后者收进 原型设计说明.md。

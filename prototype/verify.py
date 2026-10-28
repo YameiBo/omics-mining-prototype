@@ -1313,7 +1313,7 @@ DRIVE = r"""
       bodyCls: document.body.classList.contains('is-sampdrawer'),
       cur: window.__sampState().cur,
       head: txt(q('#sampDrawerId')), sub: txt(q('#sampDrawerSub')),
-      moved: ['#sampKpis', '#sampInfoCard', '#linCard', '#omTbl', '#sampDocCard']
+      moved: ['#sampKpis', '#sampInfoCard', '#linCard', '#omTbl']
              .map(s => !!(q(s) && q(s).closest('#drawerSamp'))),
       hitClose: hitOK2('[data-close="samp"]'),
       hitRow: hitOK2('#sampTbody tr:nth-child(3) .sampid'),
@@ -1337,7 +1337,7 @@ DRIVE = r"""
                       isOpen: q('#drawerSamp').classList.contains('is-open') };
     /* Esc 分层：抽屉里开出的弹窗先退，抽屉自己留着 ——
        从抽屉里点「编辑信息」，按 Esc 应该是回到抽屉而不是全没。 */
-    q('[data-samp-edit]').click(); await sleep(340);
+    q('[data-dl="samples"]').click(); await sleep(340);
     const escEv = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     R.sampDrawerEsc1 = { modal: !q('#modal').hidden, drawer: !q('#drawerSamp').hidden };
     escEv(); await sleep(380);
@@ -1809,112 +1809,6 @@ DRIVE = r"""
                        写死 4 列的布局在这里会立刻露馅。 */
                     heads: qa('#linBox svg text').filter(t => parseFloat(t.getAttribute('y') || '0') < 34).map(txt) };
 
-    /* ---- 样本资料：列表 / 真假下载 / 归档 / 移除 ---- */
-    window.__sampPick('S037'); await sleep(160);
-    q('[data-samp-pick="S037"]').click(); await sleep(320);
-    R.sampDocs0 = {
-      rows: qa('#docBody tr').length,
-      meta: txt(q('#docMeta')),
-      cols: qa('#sampDocCard thead th').length,
-      head: qa('#sampDocCard thead th').map(txt),
-      names: window.__sampDocs().map(d => d.n),
-      withFile: window.__sampDocs().filter(d => d.hasFile).length,
-      kinds: window.__sampDocs().map(d => d.k),
-      hitAdd: hitOK2('[data-samp-doc-add]'),
-      hitDl: hitOK2('[data-doc-dl="0"]'),
-      hitDel: hitOK2('[data-doc-del="0"]'),
-      /* 列宽与单元格排版：7 列必须排得下一行 —— 不定宽时浏览器会把备注列按内容
-         压到 40px，中文一字一行、行高被撑到 110px+；<td> 上挂 display:flex 则会让
-         它变成 flex 盒（Chrome 另生成匿名单元格包裹），边框只画在文字宽度上。 */
-      tbl: (function () {
-        var t = q('#docTbl'), w = t.parentNode;
-        var rows = qa('#docBody tr').map(function (r) { return Math.round(r.getBoundingClientRect().height); });
-        var note = q('#docBody .dnote');
-        var nm = q('#docBody .dname__n');
-        return {
-          dnameDisp: getComputedStyle(q('#docBody .dname')).display,
-          rowsH: rows, maxRowH: Math.max.apply(null, rows),
-          noteW: Math.round(note.getBoundingClientRect().width),
-          /* 备注列每行的字符数：逐字换行时间距会是 <4 个字宽 */
-          noteChars: Math.round(note.getBoundingClientRect().width / 11.5),
-          nameClipped: nm.scrollHeight > nm.clientHeight + 1,
-          overflowX: w.scrollWidth - w.clientWidth,
-          nameW: Math.round(q('#docBody .dname').getBoundingClientRect().width)
-        };
-      })()
-    };
-
-    /* 归档弹窗：控件中心点必须都能被自己接住（遮罩压住主体是踩过的坑）。 */
-    q('[data-samp-doc-add]').click(); await sleep(300);
-    R.sampDocOpen = {
-      open: !q('#modal').hidden, title: txt(q('#modalT')),
-      kinds: qa('#docKind option').length,
-      hitKind: hitOK2('#docKind'), hitNote: hitOK2('#docNote'), hitDz: hitOK2('#docDz'),
-      pend: txt(q('#docPend'))
-    };
-
-    /* 真实文件：DataTransfer 造出来的 File 与用户手选的一样，有 name / size；
-       归档后带着 File 对象，能真的下载 —— 这条路径才是本轮要验的那条。
-       「载入示例文件」那类捷径没有，因为捷径验不了真下载。 */
-    const dt = new DataTransfer();
-    dt.items.add(new File([new Uint8Array(2048)], 'S037_质控复核补充报告.pdf', { type: 'application/pdf' }));
-    dt.items.add(new File([new Uint8Array(512)], 'S037_出库使用记录.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
-    const fi = q('#docFile');
-    fi.files = dt.files;
-    fi.dispatchEvent(new Event('change', { bubbles: true }));
-    await sleep(280);
-    R.sampPend = { n: window.__sampState().pend, names: window.__sampState().pendNames,
-                   rows: qa('#docPend .pendrow').length, head: txt(q('#docPend .pendhd')),
-                   size: txt(q('#docPend .pendrow .pendrow__s')),
-                   /* 每行有「文件类型 + 撤掉」两个图标，所以不能只数总数 */
-                   icons: qa('#docPend .pendrow').map(r => r.querySelectorAll('svg.ico').length),
-                   missIco: qa('#docPend svg.ico--miss').length };
-    /* 选错了还来得及撤 —— 「点归档才写库」这个承诺要能被验证 */
-    q('[data-pend-del="1"]').click(); await sleep(240);
-    R.sampPendDel = { n: window.__sampState().pend, names: window.__sampState().pendNames };
-
-    q('#docNote').value = '质控复核补充材料';
-    q('[data-doc-submit]').click(); await sleep(440);
-    R.sampDocDone = {
-      modal: q('#modal').hidden,
-      rows: qa('#docBody tr').length,
-      meta: txt(q('#docMeta')),
-      docs: window.__sampDocs(),
-      blob: txt(q('#docBody')),
-      toast: lastToast()
-    };
-
-    /* 一份都没选就点归档：必须拦住、且必须留在弹窗里（否则用户以为存进去了） */
-    q('[data-samp-doc-add]').click(); await sleep(280);
-    q('[data-doc-submit]').click(); await sleep(320);
-    R.sampDocEmpty = { modal: q('#modal').hidden, rows: qa('#docBody tr').length,
-                       err: q('#docDz').classList.contains('is-err'), toast: lastToast() };
-    q('#modal .iconbtn[data-close="modal"]').click(); await sleep(220);
-
-    /* 下载分两种：内置条目只有元数据（直接说清、**不弹确认框**），
-       新归档的带真实文件（先弹确认框，确认后才真的交给浏览器）。 */
-    q('[data-doc-dl="0"]').click(); await sleep(300);
-    R.sampDlDemo = { modalOpen: !q('#modal').hidden, toast: lastToast() };
-    const realIdx = window.__sampDocs().map((d, i) => d.hasFile ? i : -1).filter(i => i >= 0)[0];
-    R.sampDlReal = { idx: realIdx, hasFile: realIdx >= 0 };
-    if (realIdx >= 0) {
-      q('[data-doc-dl="' + realIdx + '"]').click(); await sleep(340);
-      R.sampDlReal.modalTitle = txt(q('#modalT'));
-      R.sampDlReal.modalBody = txt(q('#modalB'));
-      R.sampDlReal.pending = window.__dlPending();
-      R.sampDlReal.toastBefore = lastToast();
-      q('#modal [data-dl-go]').click(); await sleep(520);
-      R.sampDlReal.modalClosed = q('#modal').hidden;
-    }
-    R.sampDlReal.toast = lastToast();
-
-    /* 移除：条数与计数文案必须一起变 */
-    const dBefore = qa('#docBody tr').length;
-    if (realIdx >= 0) { q('[data-doc-del="' + realIdx + '"]').click(); await sleep(340); }
-    R.sampDocRm = { before: dBefore, after: qa('#docBody tr').length,
-                    meta: txt(q('#docMeta')), names: window.__sampDocs().map(d => d.n),
-                    toast: lastToast() };
-
     /* ---- 登记新样本：三种非法输入都要被拦，正常输入要真落库 ---- */
     q('[data-samp-new]').click(); await sleep(300);
     R.sampNewOpen = {
@@ -1953,28 +1847,6 @@ DRIVE = r"""
       infoFields: window.__sampState().infoFields,
       infoBlob: txt(q('#sampInfo')),
       docsRows: qa('#docBody tr').length, docsMeta: txt(q('#docMeta')),
-      toast: lastToast()
-    };
-
-    /* ---- 编辑信息：保存后卡片上必须真的是新值 ---- */
-    q('[data-samp-edit]').click(); await sleep(300);
-    R.sampEditOpen = {
-      open: !q('#modal').hidden, title: txt(q('#modalT')),
-      valSubj: q('#esSubj').value, valLoc: q('#esLoc').value,
-      verdicts: qa('#esVerdict option').length,
-      hitStage: hitOK2('#esStage'), hitVerdict: hitOK2('#esVerdict'), hitCuse: hitOK2('#esCuse')
-    };
-    q('#esStage').value = 'II 期';
-    q('#esLoc').value = 'B 库 / 01 架 / 02 盒 / A1';
-    q('#esRin').value = '7.4';
-    q('#esVerdict').value = '合格';
-    q('#esConsent').value = '是';
-    q('#esCuse').value = '仅限本课题研究';
-    q('[data-samp-edit-submit]').click(); await sleep(460);
-    R.sampEditDone = {
-      modal: q('#modal').hidden,
-      stage: siRow('临床分期'), loc: siRow('存储位置'), rin: siRow('RNA 完整性'),
-      verdict: siRow('质控结论'), consent: siRow('知情同意状态'), use: siRow('用途限制'),
       toast: lastToast()
     };
 
@@ -4608,8 +4480,7 @@ try:
         '32-samp-cross.png': 'gene', '33-samp-lineage.png': 'gene',
         '33b-samp-lineage-row.png': 'gene', '50-samp-drawer.png': 'gene',
         '35-samp-fold.png': 'gene',
-        '41-samp-info.png': 'gene', '42-samp-docs.png': 'gene',
-        '43-samp-docs-add.png': 'gene', '44-samp-new.png': 'gene',
+        '41-samp-info.png': 'gene', '44-samp-new.png': 'gene',
         '45-samp-list.png': 'gene', '46-dl-confirm.png': 'gene',
         '48-run-pipe.png': 'p06',
         '49-samp-kpi.png': 'gene',
@@ -4897,7 +4768,7 @@ try:
          "c&&c.scrollIntoView({block:'start'});},160)")
     # v46：删掉 `36-gene-rebuild.png` / `37-gene-running.png` / `38-gene-done.png` 三张 ——
     # 它们拍的是「重建档案」抽屉的配置 / 运行中 / 完成三态，抽屉整块撤了。
-    # 样本档案四张：信息卡 / 资料卡 / 归档弹窗（带待归档清单）/ 登记弹窗。
+    # 样本档案两张：信息卡 / 登记弹窗（资料卡已随「样本资料」模块撤除）。
     # （v16 已删掉「功能介绍展开态」那张 —— 页面级介绍段落整体撤了，没有可展开的东西。
     #   当时的排序理由「都排在 40 之前」随之作废，现在的排序理由见下面每张的注释。）
     # 每张自己显式 __go + 选样本，不靠上一张的余温。
@@ -4907,24 +4778,6 @@ try:
          "window.__sampPick('S037');"
          "setTimeout(()=>{var c=document.querySelector('#sampInfoCard');"
          "c&&c.scrollIntoView({block:'start'});},180)")
-    shot("42-samp-docs.png",
-         "window.__go('gene'); "
-         "window.__sampPick('S037');"
-         "setTimeout(()=>{var c=document.querySelector('#sampDocCard');"
-         "c&&c.scrollIntoView({block:'start'});},180)")
-    # 归档弹窗：带上两份待归档文件，展示「先列出来、点归档才写库」这一步
-    shot("43-samp-docs-add.png",
-         "window.__goHome(); window.__go('gene'); "
-         "window.__sampPick('S037');"
-         "setTimeout(()=>{document.querySelector('[data-samp-doc-add]').click();"
-         "setTimeout(()=>{"
-         # 类型要跟文件名对得上：不改的话截图上写着「知情同意书」却挂着质检报告
-         "var k=document.querySelector('#docKind'); if(k){k.value='样本质检报告';}"
-         "var dt=new DataTransfer();"
-         "dt.items.add(new File([new Uint8Array(2048)],'S037_质控复核补充报告.pdf',{type:'application/pdf'}));"
-         "dt.items.add(new File([new Uint8Array(131072)],'S037_病理会诊意见.pdf',{type:'application/pdf'}));"
-         "var fi=document.querySelector('#docFile');"
-         "if(fi){fi.files=dt.files;fi.dispatchEvent(new Event('change',{bubbles:true}));}},140);},240)")
     # 样本列表：45 排在 44 之前，因为 44 会开「登记新样本」弹窗且不带关闭动作。
     # 这张要的是**抽屉收起**的列表全貌（翻页、四维筛选、选中行都能看到），
     # 所以显式把抽屉关掉 —— 抽屉开着会压掉列表右侧四列。
@@ -5686,7 +5539,7 @@ try:
           'padRight前': _d0['padRight'], 'padRight后': _d1['padRight'],
           'drawerW': _d1['w'], 'bodyCls': _d1['bodyCls']})
     # 「五块都搬进去了」：不是数抽屉里有多少卡，而是逐块确认它的宿主换成了抽屉
-    need('五块详情（指标/信息/血缘/跨组学/资料）都住在抽屉里',
+    need('四块详情（指标/信息/血缘/跨组学）都住在抽屉里',
          all(_d1['moved']) and _d1['head'] == _d1['cur'],
          {'moved': _d1['moved'], 'head': _d1['head'], 'cur': _d1['cur'], 'sub': _d1['sub']})
     need('抽屉开着，页面上的列表照样可点（无遮罩）',
@@ -5753,14 +5606,14 @@ try:
     need('样本档案默认选中 S037 · 选中态在列表行上（chips 已撤）',
          d['samp0']['chipsGone'] and d['samp0']['rowOn'] == 1
          and d['samp0']['onId'] == 'S037'
-         and d['samp0']['kpi'] == 4, d['samp0'])
+         and d['samp0']['kpi'] == 2, d['samp0'])
     # 边数不写死：受试者 → 采集物也是一条真实边（v24 补上后每个样本 +1），
     # 恒定的是「每个非根节点恰有一个父」→ 边数 == 节点数 - 1。
     need('血缘图 7 节点、每条边都有唯一父节点',
          d['samp0']['nodes'] == 7 and d['samp0']['edges'] == d['samp0']['nodes'] - 1
          and d['samp0']['badge'] == 7, d['samp0'])
 
-    # ---- 特定样本条：条有底色、四格四色、彩字压彩底 ≥ 4.5 ----
+    # ---- 特定样本条：条有底色、两格两色、彩字压彩底 ≥ 4.5 ----
     _kt = d['sampKpiTone']
     _W = ('rgb(255, 255, 255)', 'rgba(0, 0, 0, 0)', 'transparent')
     need('特定样本条不再是白底白带（条底与四格底都不是白）',
@@ -5778,13 +5631,13 @@ try:
     #    (max+0.05)/(min+0.05)，恒 ≥1，写成 > 1.0 等于永远通过：
     #    真把四格做得比条还深（层次反转），这条照样是绿的。
     #    所以这句判的是**亮度本身**，且要求拉得开 ≥0.02（光「不等于」不够）。
-    need('四格浮在彩带上（每格都比条底亮一档，不糊进条里）',
+    need('两格浮在彩带上（每格都比条底亮一档，不糊进条里）',
          all(c['L'] > _kt['wrapL'] for c in _kt['cells'])
          and min(c['L'] - _kt['wrapL'] for c in _kt['cells']) >= 0.02,
          {'wrapL': _kt['wrapL'], 'cellL': [c['L'] for c in _kt['cells']],
           'sym': _kt['cellVsWrap']})
-    need('四格各自上色（四格四色，不是同一个色号刷四遍）',
-         _kt['n'] == 4 and len(set(_kt['hues'])) == 4, {'n': _kt['n'], 'hues': _kt['hues']})
+    need('两格各自上色（两格两色，不是同一个色号刷两遍）',
+         _kt['n'] == 2 and len(set(_kt['hues'])) == 2, {'n': _kt['n'], 'hues': _kt['hues']})
     need('每格顶部 3px 色条真的渲染出来（inset 阴影，不是只挂了个类名）',
          all('inset' in c['bar'] and '3px' in c['bar'] for c in _kt['cells'])
          and all(c['radius'] != '0px' for c in _kt['cells']),
@@ -5796,7 +5649,7 @@ try:
          {'min': _kt['minR'],
           'per': [{'v': c['v'], 'rV': c['rV'], 'rL': c['rL'], 'rF': c['rF']} for c in _kt['cells']]})
     # gap 从 1px 变 10px 是为了让条的底色看得见；格子仍须并排（挤成两行说明宽度不够）。
-    need('特定样本条四格仍并排一行、条底在格间露得出来',
+    need('特定样本条两格仍并排一行、条底在格间露得出来',
          _kt['rows'] == 1 and _kt['gap'] >= 6 and _kt['pad'] >= 6,
          {'rows': _kt['rows'], 'gap': _kt['gap'], 'pad': _kt['pad']})
     # ⚠ 「四格一行」不足以说明这条没被压坏：抽屉体是 flex 列时整体会被压成 20px 高，
@@ -5811,7 +5664,7 @@ try:
     # ---- 血缘谱系：横向「层级 = 列」布局（本节取代原纵向四层）----
     _ll = d['linLayout']
     need('血缘按层级排成 4 列、列名由数据现算',
-         _ll['heads'] == ['队列个体', '样本类型', '分装样本', '衍生模型']
+         _ll['heads'] == ['样本源', '样本类型', '分装样本', '衍生模型']
          and len(_ll['colsX']) == 4, {'heads': _ll['heads'], 'x': _ll['colsX']})
     # 列 x 坐标不写死具体值：它等于 ci*列宽 + 居中偏移，只要「等间距」成立即可，
     # 改列宽时不必回来改断言。
@@ -5835,7 +5688,7 @@ try:
          all(o['white'] for o in _ll['ink'])
          and min(o['ratio'] for o in _ll['ink']) >= 4.5,
          sorted(set((o['bg'], o['ratio']) for o in _ll['ink'])))
-    need('队列个体卡带图标且真的渲染出来了',
+    need('样本源卡带图标且真的渲染出来了',
          _ll['ico']['n'] == 1 and _ll['ico']['w'] > 8 and _ll['ico']['h'] > 8, _ll['ico'])
     need('血缘图有节点列表作为数据表替代视图',
          _ll['tblBtn'] and _ll['tblRows'] == _ll['nodes'],
@@ -5955,8 +5808,8 @@ try:
                                      and _rp['kpiFirst'] == _rp['target'], _rp)
     need('换样本后血缘与组学同步',       d['sampS4']['cur'] == 'S004' and d['sampS4']['nodes'] == 3
                                      and d['sampS4']['rows'] == 3, d['sampS4'])
-    need('缺失组学显式标出、不静默少一行', d['sampS4']['missRows'] == 1 and '缺失' in d['sampS4']['missBlob']
-                                     and d['sampS4']['kpiV'][3].startswith('2'), d['sampS4'])
+    need('缺失组学显式标出、不静默少一行', d['sampS4']['missRows'] == 1 and '缺失' in d['sampS4']['missBlob'],
+         d['sampS4'])
     need('跳项目概况页的数据集页签并定位到明细块',
          d['sampJump']['open'] and d['sampJump']['tab'] == 'dataset'
                                      and d['sampJump']['tag'] == 'P-2026-001'
@@ -6003,107 +5856,26 @@ try:
     # ══════ 样本档案：信息与资料（「存放样本信息和资料」这一轮）══════
     _si = d['sampInfo']
     _f = dict((r[0], r[1]) for r in _si['fields'])
-    need('样本信息卡 6 组 27 字段',      _si['groups'] == 6 and _si['rows'] == 27,
+    need('样本信息卡 4 组 16 字段',      _si['groups'] == 4 and _si['rows'] == 16,
          {'groups': _si['groups'], 'rows': _si['rows']})
     need('信息分组标题与顺序正确',
-         _si['titles'] == ['标识信息', '临床信息', '采集与处理', '存储与位置', '质控信息', '知情同意与伦理'],
+         _si['titles'] == ['标识信息', '临床信息', '采集与处理', '存储与位置'],
          _si['titles'])
     # 字段值必须逐条核对：只数个数的话，整张字段表漂了而个数照样是对的
     need('信息卡字段来自顶层字段（不是另存的一份）',
          _f.get('样本 ID') == 'S037' and _f.get('样本源ID') == 'SUBJ-0371'
-         and _f.get('采集物') == '肝组织 + 外周血' and _f.get('采集时间') == '2026-03-14'
+         and _f.get('样本类型') == '肝组织 + 外周血' and _f.get('采集时间') == '2026-03-14'
          and _f.get('存放条件') == '液氮 / -80 ℃',
-         dict((k, _f.get(k)) for k in ['样本 ID', '样本源ID', '采集物', '采集时间', '存放条件']))
+         dict((k, _f.get(k)) for k in ['样本 ID', '样本源ID', '样本类型', '采集时间', '存放条件']))
     need('分装 / 衍生数取自血缘谱系',    _si['splitDeriv']['v'] == '2 份分装 · 3 份衍生', _si['splitDeriv'])
     need('所属项目取自跨组学记录',       _si['projects']['v'] == 'P-2026-001 · P-2026-013', _si['projects'])
-    need('无别名样本明说「无别名」',      _si['alias']['v'] == '无别名', _si['alias'])
-    need('质控结论带状态色（合格 → is-ok）',
-         _f.get('质控结论') == '合格' and 'is-ok' in _si['verdict']['cls'], _si['verdict'])
-    need('编辑信息按钮点得到',           _si['hitEdit']['ok'], _si['hitEdit']['got'])
 
-    # 信息、资料、组学缺失三处必须讲同一件事 —— 本轮最该守住的一致性
-    need('S004 血浆溶血 ↔ 质控不合格 ↔ 蛋白组缺失',
-         '血浆不合格' in d['sampQc4']['verdict']['v'] and '溶血' in d['sampQc4']['plasma']['v']
-         and d['sampQc4']['missRows'] == 1 and '蛋白组' in d['sampQc4']['omBlob'], d['sampQc4'])
-    need('S052 血清不足 ↔ 只缺蛋白组（转录组仍产出）',
-         '血清' in d['sampQc52']['plasma']['v'] and '不合格' in d['sampQc52']['verdict']['v']
-         and d['sampQc52']['rows'] == 3 and d['sampQc52']['missRows'] == 1, d['sampQc52'])
     need('S068 有别名 ↔ 血缘多一个节点与一条 ID 映射边',
-         'S068A' in d['sampAlias']['alias']['v']
-         and d['sampAlias']['nodes'] == 5
+         d['sampAlias']['nodes'] == 5
          and d['sampAlias']['edges'] == d['sampAlias']['nodes'] - 1, d['sampAlias'])
     need('血缘列数随数据增减（S068 多一层「原始登记 ID」）',
-         d['sampAlias']['heads'] == ['队列个体', '原始登记 ID', '样本类型', '分装样本'],
+         d['sampAlias']['heads'] == ['样本源', '原始登记 ID', '样本类型', '分装样本'],
          d['sampAlias']['heads'])
-
-    _d0 = d['sampDocs0']
-    need('S037 已归档 5 份资料、计数与表体同源',
-         _d0['rows'] == 5 and _d0['meta'].startswith('5 份'), _d0['meta'])
-    need('资料表 7 列',                  _d0['cols'] == 7, _d0['head'])
-    need('资料类型覆盖同意书/伦理/病理/质检/采集记录',
-         set(_d0['kinds']) == {'知情同意书', '伦理批件', '病理报告', '样本质检报告', '采集与处理记录'},
-         sorted(set(_d0['kinds'])))
-    need('内置条目不假装有文件',          _d0['withFile'] == 0, _d0['withFile'])
-    need('资料卡三个按钮都点得到',
-         _d0['hitAdd']['ok'] and _d0['hitDl']['ok'] and _d0['hitDel']['ok'],
-         {'add': _d0['hitAdd']['got'], 'dl': _d0['hitDl']['got'], 'del': _d0['hitDel']['got']})
-    _t0 = _d0['tbl']
-    need('资料表 7 列排得下一行（文件名列不被压成竖排）',
-         _t0['dnameDisp'] == 'table-cell'      # flex 只许落在内层 span 上
-         and _t0['noteChars'] >= 9              # 备注列够放 9 个汉字，不是一字一行
-         and _t0['maxRowH'] <= 70               # 行高稳定（竖向排字会撑到 110px+）
-         and _t0['overflowX'] == 0              # 不横向溢出（溢出说明列宽又超了）
-         and _t0['nameClipped'] is False, _t0)
-
-    _do = d['sampDocOpen']
-    need('归档弹窗打开、资料类型 8 类',   _do['open'] and _do['kinds'] == 8, _do['kinds'])
-    need('归档弹窗控件都能被自己接住',
-         _do['hitKind']['ok'] and _do['hitNote']['ok'] and _do['hitDz']['ok'],
-         {'kind': _do['hitKind']['got'], 'note': _do['hitNote']['got'], 'dz': _do['hitDz']['got']})
-
-    _p = d['sampPend']
-    need('选中两个文件先进待归档清单（点了归档才写库）',
-         _p['n'] == 2 and _p['rows'] == 2 and _p['names'][0].endswith('.pdf'), _p)
-    need('待归档显示真实文件大小',         _p['size'] == '2.0 KB', _p['size'])
-    need('待归档每行都带图标、且没有未登记的图标名',
-         len(_p['icons']) == 2 and all(n >= 1 for n in _p['icons']) and _p['missIco'] == 0,
-         {'icons': _p['icons'], 'missing': _p['missIco']})
-    need('待归档能撤掉一份再来',
-         d['sampPendDel']['n'] == 1 and len(d['sampPendDel']['names']) == 1, d['sampPendDel'])
-
-    _dd = d['sampDocDone']
-    need('归档后 6 份、弹窗关闭、有结果提示',
-         _dd['rows'] == 6 and _dd['meta'].startswith('6 份') and _dd['modal']
-         and '已归档' in _dd['toast'], {'rows': _dd['rows'], 'meta': _dd['meta'], 'toast': _dd['toast']})
-    need('新归档条目绑定真实文件（可下载）',
-         sum(1 for x in _dd['docs'] if x['hasFile']) == 1
-         and _dd['docs'][-1]['n'] == DL_NAME, [x['n'] for x in _dd['docs']])
-
-    _de = d['sampDocEmpty']
-    need('没选文件就点归档会被拦住（弹窗不关 + 红框 + 提示）',
-         (not _de['modal']) and _de['rows'] == 6 and _de['err'] and '还没有选文件' in _de['toast'],
-         _de)
-
-    need('内置条目的下载直接说清没有文件，且不弹确认框',
-         '没有实际文件' in d['sampDlDemo']['toast'] and d['sampDlDemo']['modalOpen'] is False,
-         d['sampDlDemo'])
-    need('归档件下载先弹确认框（写明文件名与体积）',
-         d['sampDlReal']['modalTitle'] == '下载确认' and DL_NAME in d['sampDlReal']['modalBody']
-         and d['sampDlReal']['pending']['name'] == DL_NAME
-         and d['sampDlReal']['pending']['size'] == 2048
-         and '已开始下载' not in (d['sampDlReal']['toastBefore'] or ''), d['sampDlReal'])
-    need('确认后才真的开始下载，且确认框关闭',
-         d['sampDlReal']['modalClosed'] is True
-         and '已开始下载' in d['sampDlReal']['toast'], d['sampDlReal'])
-    # 光有 toast 不算数 —— 文件真的落到磁盘上，才算「能下载」
-    need('归档的真实文件确实下载落地（2048 字节）',
-         os.path.exists(DL_FILE) and os.path.getsize(DL_FILE) == 2048,
-         (DL_FILE, os.path.getsize(DL_FILE) if os.path.exists(DL_FILE) else '不存在'))
-
-    _dr = d['sampDocRm']
-    need('移除后回到 5 份且条数与文案同步',
-         _dr['before'] == 6 and _dr['after'] == 5 and _dr['meta'].startswith('5 份')
-         and DL_NAME not in _dr['names'] and '已从档案移除' in _dr['toast'], _dr)
 
     _no = d['sampNewOpen']
     need('登记弹窗打开、两个下拉都有选项',
@@ -6135,33 +5907,16 @@ try:
     need('新样本 KPI 不留空档（没例号就不出「·  ·」）',
          '·  ·' not in ' '.join(_nd['kpiF']) and '第 76 例' in ' '.join(_nd['kpiF']), _nd['kpiF'])
     need('新样本信息卡仍按 6 组 27 字段渲染（缺项显示「——」）',
-         _nd['infoGroups'] == 6 and _nd['infoFields'] == 27 and '尚未上架' in _nd['infoBlob'],
+         _nd['infoGroups'] == 4 and _nd['infoFields'] == 16 and '尚未上架' in _nd['infoBlob'],
          {'groups': _nd['infoGroups'], 'fields': _nd['infoFields']})
-    need('新样本资料是空态而不是空表',
-         _nd['docsRows'] == 1 and _nd['docsMeta'] == '尚未归档', _nd['docsMeta'])
     need('登记有结果提示',                '已登记入档' in _nd['toast'], _nd['toast'])
 
-    _eo = d['sampEditOpen']
-    need('编辑弹窗预填当前值',
-         _eo['open'] and _eo['valSubj'] == 'SUBJ-0432' and _eo['verdicts'] == 4, _eo)
-    need('编辑弹窗控件都能被自己接住',
-         _eo['hitStage']['ok'] and _eo['hitVerdict']['ok'] and _eo['hitCuse']['ok'],
-         {'stage': _eo['hitStage']['got'], 'cuse': _eo['hitCuse']['got']})
-    _ed = d['sampEditDone']
-    need('编辑保存后卡片上是真新值（不只看 toast）',
-         _ed['modal'] and _ed['stage']['v'] == 'II 期'
-         and _ed['loc']['v'] == 'B 库 / 01 架 / 02 盒 / A1'
-         and _ed['rin']['v'] == 'RIN 7.4' and _ed['consent']['v'] == '是'
-         and _ed['use']['v'] == '仅限本课题研究',
-         dict((k, _ed[k]['v']) for k in ['stage', 'loc', 'rin', 'consent', 'use']))
-    need('质控结论的状态色由结论值反查（选「合格」→ is-ok）',
-         _ed['verdict']['v'] == '合格' and 'is-ok' in _ed['verdict']['cls'], _ed['verdict'])
     # 状态值垫 soft 底压深字：直接拿 --color-warn 铺白底只有 4.25:1，过不了 AA
     need('样本信息状态值对比度 ≥4.5',
          d['siInkMin'] >= 4.5 and len(d['siInk']) > 0,
          {'min': d['siInkMin'], 'items': d['siInk']})
     need('探针收尾回位到 S037（32/33 截的是它）',
-         d['sampRestore']['cur'] == 'S037' and d['sampRestore']['docs'] == 5, d['sampRestore'])
+         d['sampRestore']['cur'] == 'S037', d['sampRestore'])
 
     # ---- v40 需求 2：系统管理 › 示例数据集（显示 / 简介 / 封面）----
     _pi, _ph, _pn, _pc, _pa, _pr = (d['pubdsInit'], d['pubdsHide'], d['pubdsIntro'],

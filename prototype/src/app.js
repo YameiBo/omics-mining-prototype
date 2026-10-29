@@ -11657,6 +11657,11 @@ function dlOpen(key, btn) {
      （v46 之前的 `alignmatrix` 就是这样：HTML 上有按钮、DL 里没有条目，
        而这条 `return` 把它咽掉了。verify 的「下载入口齐备」改成集合比对后才抓到。） */
   if (!spec) { toast(DL_UNAVAIL, 'warn'); return; }
+  /* 导出选中列表：一个都没勾就明确拦住，不弹确认框、不产出空文件 */
+  if (key === 'samplist' && !Object.keys(SAMP_SEL).length) {
+    toast('未勾选任何样本，无法导出', 'warn');
+    return;
+  }
   var built = null;
   try { built = spec.build(btn); } catch (err) { built = null; }
   if (!built) { toast(DL_UNAVAIL, 'warn'); return; }

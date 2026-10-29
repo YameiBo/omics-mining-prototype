@@ -1687,6 +1687,14 @@ DRIVE = r"""
       r.all = { checked: qa('#sampTbody [data-samp-check]:checked').length, allOn: sa.checked };
       sa.click();
       r.none = { checked: qa('#sampTbody [data-samp-check]:checked').length, allOn: sa.checked };
+      /* 未勾选点导出：不弹确认框、提示无法导出；勾一条后应能弹框 */
+      q('[data-dl="samplist"]').click();
+      r.noSel = { modal: !q('#modal').hidden, toast: lastToast() };
+      q('#sampTbody [data-samp-check]').click();
+      q('[data-dl="samplist"]').click();
+      r.one = { modal: !q('#modal').hidden, name: (window.__dlPending() || {}).name || null };
+      q('#modal .iconbtn[data-close="modal"]').click();
+      q('#sampTbody [data-samp-check]').click();
       return r;
     })();
 
@@ -5810,6 +5818,10 @@ try:
          _sel['head'] and _sel['checked'] == 2 and _sel['indet'] is True and _sel['allOn'] is False
          and _sel['all']['checked'] == 15 and _sel['all']['allOn'] is True
          and _sel['none']['checked'] == 0 and _sel['none']['allOn'] is False, _sel)
+    need('未勾选时导出被拦住（无确认框 + 明确提示）',
+         _sel['noSel']['modal'] is False and '无法导出' in (_sel['noSel']['toast'] or ''), _sel['noSel'])
+    need('勾选后导出选中列表能正常弹确认框',
+         _sel['one']['modal'] is True and _sel['one']['name'] == 'sample_list.tsv', _sel['one'])
     need('组学覆盖四个字标 · 首例三路产出', _sl['omtags'] == 4 and _sl['omOn'] == 3, _sl)
     need('分页器报出 15 / 75',            '共 75 条' in _sl['pager']
                                      and _sl['pager'].startswith('第 1'), _sl['pager'])

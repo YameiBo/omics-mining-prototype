@@ -1676,6 +1676,20 @@ DRIVE = r"""
       return { n: window.__sampIds().length, g: g, t: t, p: p, all: all };
     })();
 
+    /* 勾选与一键全选：两态 + 半选（indeterminate） */
+    R.sampSel = (function () {
+      var cbs = qa('#sampTbody [data-samp-check]');
+      if (cbs[0]) cbs[0].click(); if (cbs[1]) cbs[1].click();
+      var sa = q('#sampSelAll');
+      var r = { checked: qa('#sampTbody [data-samp-check]:checked').length,
+                indet: sa.indeterminate, allOn: sa.checked, head: !!sa };
+      sa.click();
+      r.all = { checked: qa('#sampTbody [data-samp-check]:checked').length, allOn: sa.checked };
+      sa.click();
+      r.none = { checked: qa('#sampTbody [data-samp-check]:checked').length, allOn: sa.checked };
+      return r;
+    })();
+
     R.sampList = {
       cols: qa('#sampTbl thead th').length,
       rows: qa('#sampTbody tr.samptr').length,
@@ -1712,9 +1726,9 @@ DRIVE = r"""
 
     /* 排序：点「采集日期」列头两次，验单调 + 表头高亮 */
     q('#sampTbl [data-samp-sort="t"]').click(); await sleep(200);
-    const dAsc = qa('#sampTbody tr.samptr').map(r => r.children[3].textContent.trim());
+    const dAsc = qa('#sampTbody tr.samptr').map(r => r.children[4].textContent.trim());
     q('#sampTbl [data-samp-sort="t"]').click(); await sleep(200);
-    const dDesc = qa('#sampTbody tr.samptr').map(r => r.children[3].textContent.trim());
+    const dDesc = qa('#sampTbody tr.samptr').map(r => r.children[4].textContent.trim());
     R.sampSort = { asc: dAsc, desc: dDesc,
                    ascOk: dAsc.every((v, i) => i === 0 || dAsc[i-1] <= v),
                    descOk: dDesc.every((v, i) => i === 0 || dDesc[i-1] >= v),
@@ -5789,8 +5803,13 @@ try:
          and min(_cv['g'], _cv['t'], _cv['p']) == _cv['all']
          and _cv['n'] >= _cv['g'], _cv)
     _sl = d['sampList']
-    need('列表每页 15 行 · 8 个维度列',  _sl['rows'] == 15 and _sl['cols'] == 8, _sl)
+    need('列表每页 15 行 · 9 列（含勾选列）', _sl['rows'] == 15 and _sl['cols'] == 9, _sl)
     need('列表首行是 S001（按 ID 排）',    _sl['first'] == 'S001', _sl['first'])
+    _sel = d['sampSel']
+    need('列表支持勾选与一键全选（全选 / 半选 / 取消）',
+         _sel['head'] and _sel['checked'] == 2 and _sel['indet'] is True and _sel['allOn'] is False
+         and _sel['all']['checked'] == 15 and _sel['all']['allOn'] is True
+         and _sel['none']['checked'] == 0 and _sel['none']['allOn'] is False, _sel)
     need('组学覆盖四个字标 · 首例三路产出', _sl['omtags'] == 4 and _sl['omOn'] == 3, _sl)
     need('分页器报出 15 / 75',            '共 75 条' in _sl['pager']
                                      and _sl['pager'].startswith('第 1'), _sl['pager'])
@@ -7041,8 +7060,8 @@ try:
          _s['lines'] == d['dlSampN'] and '样本 ID' in _s['head'] and '知情同意' in _s['head'],
          (_s['lines'], d['dlSampN'], _s['head'][:40]))
     _sl = _bl['samplist']
-    need('导出当前列表与档案同口径（未筛选即全量）',
-         _sl['lines'] == d['dlSampN'] and _sl['note'].startswith('未筛选'), _sl)
+    need('导出选中列表：未勾选时回退为当前筛选（全量）',
+         _sl['lines'] == d['dlSampN'] and '未勾选' in _sl['note'], _sl)
     # v46：删掉了「基因档案导出」（genes）那条 —— 那一页整块撤了，导出条目同批删掉。
     _p = _bl['patho']
     need('结果表导出带表头，并说明源数据全量',

@@ -4208,6 +4208,27 @@ document.addEventListener('click', function (e) {
   if ((t = e.target.closest('[data-samp-sort]'))) { sampSort(t.getAttribute('data-samp-sort')); return; }
   if ((t = e.target.closest('[data-samp-page]'))) { sampPage(t.getAttribute('data-samp-page')); return; }
   if (e.target.closest('[data-samp-fltreset]')) { sampFltReset(); return; }
+  /* v68：列表勾选与全选。必须在「点行选中」之前拦下，否则点复选框会顺带把
+     那一行切成当前样本（复选框是勾选，不是选中）。 */
+  if (e.target.id === 'sampSelAll') {
+    var allIds = sampSorted(sampRows());
+    var allOn = allIds.length > 0 && allIds.every(function (x) { return SAMP_SEL[x]; });
+    allIds.forEach(function (x) { if (allOn) delete SAMP_SEL[x]; else SAMP_SEL[x] = 1; });
+    renderSampList();
+    return;
+  }
+  if ((t = e.target.closest('[data-samp-check]'))) {
+    var cid = t.getAttribute('data-samp-check');
+    if (t.checked) SAMP_SEL[cid] = 1; else delete SAMP_SEL[cid];
+    var sa = $('#sampSelAll');
+    if (sa) {
+      var fids = sampSorted(sampRows());
+      var n2 = fids.filter(function (x) { return SAMP_SEL[x]; }).length;
+      sa.checked = n2 > 0 && n2 === fids.length;
+      sa.indeterminate = n2 > 0 && n2 < fids.length;
+    }
+    return;
+  }
   if ((t = e.target.closest('[data-samp-pick]'))) { sampPick(t.getAttribute('data-samp-pick')); return; }
   if (e.target.closest('[data-samp-go]')) { sampPick(sampMatch(SAMP_Q)[0] || ''); return; }
   if ((t = e.target.closest('[data-linnode]'))) { linFocus(t.getAttribute('data-linnode')); return; }
@@ -9397,6 +9418,7 @@ var DOC_KINDS = ['知情同意书', '伦理批件', '病理报告', '样本质�
 var SAMP_PEND = [];          /* 归档弹窗里待提交的文件（可一次多个）：{ k, n, sz, note, f } */
 
 var SAMP_CUR = 'S037';       /* 当前选中的样本 ID */
+var SAMP_SEL = {};           /* 列表勾选集合（导出选中列表用；跨分页保留） */
 var SAMP_Q = '';             /* 搜索关键词（只影响候选 chips） */
 var LIN_FOCUS = '';          /* 血缘图上被点中的节点：'' = 不筛选 */
 var LIN_OPEN = true;         /* 血缘谱系卡是否展开。是全局 UI 偏好而非样本属性 ——
@@ -9677,6 +9699,8 @@ function renderSampList() {
   box.innerHTML = rows.map(function (id) {
     var a = SAMP_ARCHIVE[id], m = a.meta || {};
     return '<tr class="samptr' + (id === SAMP_CUR ? ' is-on' : '') + '" data-samp-pick="' + id + '">'
+      + '<td class="nw"><input type="checkbox" data-samp-check="' + id + '"'
+      + (SAMP_SEL[id] ? ' checked' : '') + ' aria-label="选择样本 ' + esc(id) + '"></td>'
       + '<td class="nw"><button type="button" class="sampid" data-samp-pick="' + id + '">' + id + '</button></td>'
       + '<td class="nw num">' + esc(a.subj) + '</td>'
       + '<td class="nw">' + esc(a.src || '系统') + '</td>'
@@ -9686,7 +9710,15 @@ function renderSampList() {
       + '<td class="nw">' + omTags(a) + '</td>'
       + '<td class="nw">' + csTag(m.consent || {}) + '</td>'
       + '</tr>';
-  }).join('') || '<tr><td colspan="8" class="tempty">没有符合当前筛选条件的样本</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="tempty">没有符合当前筛选条件的样本</td></tr>';
+
+  /* 表头三态：全选 / 半选 / 未选 —— 半选只能用 DOM 的 indeterminate 表达 */
+  var selAll = $('#sampSelAll');
+  if (selAll) {
+    var selN = ids.filter(function (x) { return SAMP_SEL[x]; }).length;
+    selAll.checked = selN > 0 && selN === ids.length;
+    selAll.indeterminate = selN > 0 && selN < ids.length;
+  }
 
   var pg = $('#sampPager');
   if (pg) {
@@ -11270,6 +11302,7 @@ function dlTableRows(tbl) {
   if (ths.length) {
     cells = [];
     for (i = 0; i < ths.length; i++) {
+      if (ths[i].hasAttribute('data-noexport')) { drop[i] = 1; continue; }
       var h = dlCellText(ths[i]);
       if (DL_ACTION_COLS.indexOf(h) >= 0) { drop[i] = 1; continue; }
       cells.push(h);
@@ -11397,9 +11430,8 @@ function dlSampOmTxt(a) {
 }
 function dlSampRow(id) {
   var a = SAMP_ARCHIVE[id], m = a.meta || {};
-  return [id, a.subj, (m.sex || '—') + ' / ' + (m.age == null ? '—' : m.age), a.dx,
-          m.stage || '—', a.t, m.loc || '—', dlSampQcTxt(((m.qc || {}).st) || 'ok'),
-          dlSampOmTxt(a), String((a.docs || []).length), ((m.consent || {}).st || '—')];
+  return [id, a.subj, a.src || '系统', a.t, m.loc || '—',
+          dlSampQcTxt(((m.qc || {}).st) || 'ok'), dlSampOmTxt(a), ((m.consent || {}).st || '—')];
 }
 
 var DL = {
@@ -11445,14 +11477,17 @@ var DL = {
   },
   samplist: {
     name: 'sample_list.tsv', fmt: 'TSV',
-    src: '样本档案 › 样本列表（当前筛选与排序）',
+    src: '样本档案 › 样本列表（勾选的样本）',
     build: function () {
       var head = dlHead($('#sampTbl'));
       if (!head.length) return null;
-      var ids = sampSorted(sampRows()), rows = ids.map(dlSampRow);
+      var picked = sampSorted(sampIds().filter(function (id) { return SAMP_SEL[id]; }));
+      var ids = picked.length ? picked : sampSorted(sampRows());
+      var rows = ids.map(dlSampRow);
       var all = sampIds().length;
       return { text: dlTsv([head].concat(rows)), lines: rows.length,
-               note: rows.length === all ? '未筛选，即全部 ' + all + ' 例' : '当前的筛选结果 ' + rows.length + ' / ' + all + ' 例' };
+               note: picked.length ? '已勾选 ' + picked.length + ' 例'
+                 : (ids.length === all ? '未勾选，导出全部 ' + all + ' 例' : '未勾选，导出当前筛选 ' + ids.length + ' / ' + all + ' 例') };
     }
   },
   runlog: {

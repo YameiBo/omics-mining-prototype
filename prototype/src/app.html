@@ -349,7 +349,7 @@
           <div class="card__hd">
             <span class="card__t">样本列表</span>
             <span class="card__d" id="sampListMeta">—</span>
-            <button type="button" class="btn btn--sm ml-auto" data-dl="samplist"><i class="fa-solid fa-download ico"></i>导出当前列表</button>
+            <button type="button" class="btn btn--sm ml-auto" data-dl="samplist"><i class="fa-solid fa-download ico"></i>导出选中列表</button>
           </div>
           <div class="card__bd">
             <!-- 关键词与四个维度下拉在**同一条筛选栏**里：以前关键词单独占一行、
@@ -400,6 +400,7 @@
             <div class="tblwrap mt-3">
               <table class="tbl" id="sampTbl">
                 <thead><tr>
+                  <th class="nw" data-noexport><input type="checkbox" id="sampSelAll" aria-label="全选当前筛选的样本" title="全选"></th>
                   <th class="nw"><button type="button" class="thsort" data-samp-sort="id">样本 ID<i class="fa-solid fa-sort ico thsort__i"></i></button></th>
                   <th class="nw">样本源ID</th>
                   <th class="nw">数据来源</th>
@@ -2253,7 +2254,7 @@
             <span class="card__t">样本血缘谱系</span>
             <span class="card__d" id="linMeta">—</span>
             <div class="row gap-2 ml-auto">
-              <button type="button" class="btn btn--sm" data-lin-alt aria-expanded="false"><i class="fa-solid fa-table-list ico"></i>节点列表</button>
+              <button type="button" class="btn btn--sm" data-lin-alt aria-expanded="true"><i class="fa-solid fa-table-list ico"></i>节点列表</button>
               <!-- 排布方向切换：横向泳道（层级 = 列）⇄ 上下结构（层级 = 行）。
                    文案由 syncLinAxis() 每次重写，写的是「点下去会变成什么」；
                    内联图标只是首屏的初值，JS 一起步就会用 ico() 重画。 -->
@@ -2268,7 +2269,7 @@
           </div>
           <div class="card__bd" id="linBody">
             <div class="chartbox" id="linBox"></div>
-            <div class="tblwrap mt-3" id="linTbl" hidden></div>
+            <div class="tblwrap mt-3" id="linTbl"></div>
           </div>
         </div>
 

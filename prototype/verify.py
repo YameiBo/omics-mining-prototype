@@ -1531,7 +1531,8 @@ DRIVE = r"""
         return { t: txt(t), white: strk(t), bg: bg, ratio: bg ? rat('#FFFFFF', bg) : 0 };
       }),
       tblBtn: !!q('[data-lin-alt]'),
-      tblRows: qa('#linTbl tbody tr').length
+      tblRows: qa('#linTbl tbody tr').length,
+      tblHead: qa('#linTbl thead th').map(txt)
     };
 
     /* ---- 方向切换（v24）：横向泳道 ⇄ 上下结构 ---- */
@@ -1575,7 +1576,8 @@ DRIVE = r"""
                  const t = g.querySelector('text'), rs = g.querySelectorAll('rect');
                  const bg = rs.length ? rs[rs.length - 1].getAttribute('fill') : null;
                  return bg ? rat('#FFFFFF', bg) : 99; })),
-               tblRows: qa('#linTbl tbody tr').length };
+               tblRows: qa('#linTbl tbody tr').length,
+               tblHead: qa('#linTbl thead th').map(txt) };
     };
     /* 命中测试前必须滚进视口：血缘卡在页面中段，不滚的话 elementFromPoint
        拿到 null —— 那不是按钮坏了，是它不在屏幕上。 */
@@ -1818,7 +1820,7 @@ DRIVE = r"""
       open: !q('#modal').hidden, title: txt(q('#modalT')),
       hitId: hitOK2('#nsId'), hitSubj: hitOK2('#nsSubj'),
       hitCohort: hitOK2('#nsCohort'), hitStore: hitOK2('#nsStore'),
-      dx: qa('#nsDx option').length, mats: qa('#nsMat option').length,
+      dxInput: (q('#nsDx') || {}).tagName === 'INPUT', mats: qa('#nsMat option').length,
       cohort: q('#nsCohort').value
     };
     q('[data-samp-new-submit]').click(); await sleep(300);
@@ -5670,7 +5672,7 @@ try:
     # ---- 血缘谱系：横向「层级 = 列」布局（本节取代原纵向四层）----
     _ll = d['linLayout']
     need('血缘按层级排成 4 列、列名由数据现算',
-         _ll['heads'] == ['样本源', '样本类型', '分装样本', '衍生模型']
+         _ll['heads'] == ['样本源', '样本类型', '当前样本', '衍生样本']
          and len(_ll['colsX']) == 4, {'heads': _ll['heads'], 'x': _ll['colsX']})
     # 列 x 坐标不写死具体值：它等于 ci*列宽 + 居中偏移，只要「等间距」成立即可，
     # 改列宽时不必回来改断言。
@@ -5700,6 +5702,8 @@ try:
     need('血缘图有节点列表作为数据表替代视图（含灰色兄弟样本）',
          _ll['tblBtn'] and _ll['tblRows'] == _ll['nodes'] + 1,
          {'rows': _ll['tblRows'], 'nodes': _ll['nodes']})
+    need('节点列表表头为 节点名称 / ID（层名与节点 ID 分列）',
+         _ll['tblHead'] == ['#', '节点名称', 'ID', '说明', '上游', '组学（路）'], _ll['tblHead'])
 
     # ---- 方向切换：横向泳道 ⇄ 上下结构（v24）----
     _a0, _ar, _ab = d['linAxis0'], d['linRow'], d['linBack']
@@ -5881,12 +5885,12 @@ try:
          d['sampAlias']['nodes'] == 5
          and d['sampAlias']['edges'] == d['sampAlias']['nodes'] - 1, d['sampAlias'])
     need('血缘列数随数据增减（S068 多一层「原始登记 ID」）',
-         d['sampAlias']['heads'] == ['样本源', '原始登记 ID', '样本类型', '分装样本'],
+         d['sampAlias']['heads'] == ['样本源', '原始登记 ID', '样本类型', '当前样本'],
          d['sampAlias']['heads'])
 
     _no = d['sampNewOpen']
     need('登记弹窗打开、两个下拉都有选项',
-         _no['open'] and _no['dx'] == 6 and _no['mats'] == 6 and _no['cohort'] == 'TJ-TCM-2026', _no)
+         _no['open'] and _no['dxInput'] and _no['mats'] == 6 and _no['cohort'] == 'TJ-TCM-2026', _no)
     need('登记弹窗控件都能被自己接住',
          _no['hitId']['ok'] and _no['hitSubj']['ok'] and _no['hitCohort']['ok'] and _no['hitStore']['ok'],
          {'id': _no['hitId']['got'], 'cohort': _no['hitCohort']['got']})
@@ -5905,7 +5909,7 @@ try:
          and _nd['chipsGone'] and _nd['rowOnId'] == 'S076', _nd)
     # v46：删掉了「页签总例数文案跟着变」那条 —— 页签撤了，计数现在只由列表卡 meta
     # 一处表达（重复写两处同一个数字本来就是冗余，撤掉页签等于顺手去掉一份）。
-    need('新样本血缘只有受试者 → 采集物两层',
+    need('新样本血缘只有样本源 → 样本类型两层',
          _nd['nodes'] == 2 and _nd['edges'] == _nd['nodes'] - 1,
          {'nodes': _nd['nodes'], 'edges': _nd['edges']})
     need('新样本跨组学是空态、不是空白表',

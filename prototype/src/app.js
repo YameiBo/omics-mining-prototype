@@ -9765,7 +9765,7 @@ function renderSampKpis() {
    顶栏也因此用 rect 而不是 path 画：探针只认 rect / circle。 */
 var LIN_COLNAME = {
   subj: '样本源', alias: '原始登记 ID', self: '样本类型',
-  frac: '分装样本', deriv: '衍生模型'
+  frac: '当前样本', deriv: '衍生样本'
 };
 /* top = 顶栏色（null = 整卡浅底、无顶栏）；body = 卡身底色 */
 var LIN_SKIN = {
@@ -10119,12 +10119,12 @@ function renderLinTable(a) {
   var byId = {};
   a.lin.forEach(function (n) { byId[n.id] = n; });
   tb.innerHTML = '<table class="tbl"><thead><tr>'
-    + '<th class="num">#</th><th>节点</th><th>层级</th><th>说明</th><th>上游</th>'
+    + '<th class="num">#</th><th>节点名称</th><th>ID</th><th>说明</th><th>上游</th>'
     + '<th class="num">组学（路）</th></tr></thead><tbody>'
     + a.lin.map(function (n, i) {
         var up = n.from && byId[n.from] ? byId[n.from].t : '—';
-        return '<tr><td class="num">' + (i + 1) + '</td><td>' + esc(n.t) + '</td>'
-          + '<td>' + esc(LIN_COLNAME[n.k] || n.k) + '</td><td>' + esc(n.s) + '</td>'
+        return '<tr><td class="num">' + (i + 1) + '</td><td>' + esc(LIN_COLNAME[n.k] || n.k) + '</td>'
+          + '<td>' + esc(n.id) + '</td><td>' + esc(n.s) + '</td>'
           + '<td>' + esc(up) + '</td><td class="num">' + linOm(a, n.id) + '</td></tr>';
       }).join('')
     + '</tbody></table>';
@@ -10422,8 +10422,8 @@ function openSampNew() {
     + '</div>'
     + '<div class="frmrow">'
     + fldInp('nsCohort', '所属队列', 'TJ-TCM-2026', '')
-    + fldSel('nsDx', '疾病诊断', optHTML(SAMP_DX, '肝细胞癌'))
-    + fldSel('nsMat', '采集物', optHTML(SAMP_MATS, '肝组织 + 外周血'))
+    + fldInp('nsDx', '疾病诊断', '', '例如 肝细胞癌')
+    + fldSel('nsMat', '样本类型', optHTML(SAMP_MATS, '肝组织 + 外周血'))
     + '</div>'
     + '<div class="frmrow">'
     + '<div class="fld"><label class="fld__l" for="nsT">采集时间</label>'
@@ -10432,7 +10432,8 @@ function openSampNew() {
     + '</div>'
     + '<div class="frmrow">'
     + fldInp('nsLoc', '存放位置', '', '例如 A 库 / 03 架 / 12 盒 / B4')
-    + fldSel('nsSrc', '数据来源', '<option>手动登记</option>')
+    + '<div class="fld"><label class="fld__l" for="nsSrc">数据来源</label>'
+    + '<select class="sel" id="nsSrc" disabled aria-disabled="true"><option>手动登记</option></select></div>'
     + '</div>'
     + frmLegend()
     + '</div>',

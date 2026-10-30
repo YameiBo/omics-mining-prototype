@@ -713,12 +713,12 @@ DRIVE = r"""
     q('#btnResult').click(); await sleep(420);
     R.resultPage = qa('.page.is-on')[0].id;      /* 期望 page-p07 */
     R.resStep = {
-      eye: txt(q('#page-p07 .phead__eye')),      /* 期望 步骤 5 / 5 · P-07 */
+      eye: txt(q('#page-p07 .phead__eye')),      /* 期望 步骤 4 / 4 · P-07 */
       h1: txt(q('#page-p07 .phead__h1')),
-      step: txt(q('#crumbStep')),                /* 期望 步骤 5 / 5 */
+      step: txt(q('#crumbStep')),                /* 期望 步骤 4 / 4 */
       crumb: txt(q('#crumb')),
       grp: txt(q('#crumbGrp')),
-      steps: qa('#page-p07 .stepper .stepper__i').length,   /* 期望 5：步骤条也补上了第 5 格 */
+      steps: qa('#page-p07 .stepper .stepper__i').length,   /* 期望 4：参数配置步骤已撤 */
       segs: qa('#viewSeg').length,               /* 期望 1 */
       rviews: qa('#resMount .rview').length,     /* 期望 6 */
       charts: qa('#resMount .chartbox').length,  /* 期望 13 */
@@ -5316,7 +5316,7 @@ try:
          d['navDeep']['cur'] == 'p04' and d['navDeep']['segs'] == ['p01', 'p02']
          and d['navDeep']['crumbs'] == ['工作台', '智能分析']
          and d['navDeep']['curCrumb'] == '流程模板'
-         and d['navDeep']['step'] == '步骤 2 / 5', d['navDeep'])
+         and d['navDeep']['step'] == '步骤 2 / 4', d['navDeep'])
     need('点面包屑「工作台」回主页（到根后该段不再生成）',
          d['crumbHomeTap']['txt'] == '工作台'
          and d['crumbHomeTap']['after'] == 'page-p01'
@@ -6042,7 +6042,7 @@ try:
     # （页面没被降级成死页），而左栏**刻意一项都不亮**（不为菜单外的页面硬凑高亮）。
     # 若哪天有人把 p02–p06 又塞回菜单，`navCur == 1` 立刻红，这一条不会白写。
     need('面包屑照旧给分组段与步骤号；页面在菜单外时左栏不亮任何一项',
-         d['crumbStep']['step'] == '步骤 2 / 5' and d['crumbStep']['hidden'] is False
+         d['crumbStep']['step'] == '步骤 2 / 4' and d['crumbStep']['hidden'] is False
          and d['crumbStep']['group'] == '智能分析' and d['crumbStep']['page'] == '流程模板'
          and d['crumbStep']['navCurN'] == 0,
          d['crumbStep'])
@@ -7183,8 +7183,8 @@ try:
     # v51：补上第 5 步「查看分析结果」→ 4 步变 5 步。页数 16→17、菜单项**仍是 10**
     # （这一页落在那个整组 off 的分组里）。三个数字一起断：只断步数的话，
     # 「步骤条多了一格但页面没建」也能混过去 —— 那种情况下点第 5 格是死的。
-    need('智能分析步骤条 5 步（v37 少样本对齐、v42 少结果全景、v51 补查看分析结果）',
-         _steps == ['数据汇集', '流程模板', '参数配置', '任务运行', '查看分析结果']
+    need('智能分析步骤条 4 步（v70 撤参数配置；v37/v42/v51 的其余调整仍在）',
+         _steps == ['数据汇集', '流程模板', '任务运行', '查看分析结果']
          and _al['pages'] == 17 and _al['navItems'] == 10, _al['stepNames'])
 
     # ══════════ v51：第 5 步「查看分析结果」= 结果全景的第二个宿主 ══════════
@@ -7198,9 +7198,9 @@ try:
     # 是空的，靠挂载后补做 fillTables() 现填 —— 漏了这一步，页面看上去完全正常，
     # 只有点那三条导出才会发现「读到的只有表头」。**一个跑不出来的动作要有人守着。**
     _rs = d['resStep']
-    need('第 5 步在位：页头 5/5 · 面包屑步骤号 · stepper 5 格 · 页名「查看分析结果」',
-         d['resultPage'] == 'page-p07' and _rs['steps'] == 5
-         and _rs['eye'] == '步骤 5 / 5 · P-07' and _rs['step'] == '步骤 5 / 5'
+    need('第 4 步在位：页头 4/4 · 面包屑步骤号 · stepper 4 格 · 页名「查看分析结果」',
+         d['resultPage'] == 'page-p07' and _rs['steps'] == 4
+         and _rs['eye'] == '步骤 4 / 4 · P-07' and _rs['step'] == '步骤 4 / 4'
          and _rs['h1'] == '查看分析结果' and _rs['crumb'] == '查看分析结果'
          and _rs['grp'] == '智能分析',
          {'page': d['resultPage'], 'step': _rs['step'], 'steps': _rs['steps'],
@@ -7225,7 +7225,7 @@ try:
     # 页脚那一格与那颗按钮是「同一件事的两个入口」，区别在于页脚这颗**不受任务状态影响**：
     # 任务还在排队时「查看结果」是灰的，页脚照样走得下去。两条都要在，少一条就少一条腿。
     need('任务运行页的页脚给出「下一步：查看分析结果」',
-         d['runEnd']['foot'] == ['p05', 'p07'], d['runEnd']['foot'])
+         d['runEnd']['foot'] == ['p04', 'p07'], d['runEnd']['foot'])
 
     # ══════════ v50 需求 2：数据汇集页「上传组学数据」→ 两栏文件选择器 ══════════
     # 原来那张拖拽卡默认了「数据还在本机」这一种来路；换选择器之后
@@ -7297,10 +7297,10 @@ try:
     need('选择屏不是向导：无步骤条、弹窗是窄版、底部只有「取消」',
          _pc['stepper'] == 0 and _pc['wide'] is False
          and _pc['foot'] == ['取消'] and all(x > 0 for x in _pc['descLen']), _pc)
-    need('「智能分析」不建项目，直接落数据汇集（5 步线）',
+    need('「智能分析」不建项目，直接落数据汇集（4 步线）',
          _psm['modalHidden'] is True and _psm['modalWideLeft'] is False
          and _psm['page'] == 'page-p02' and _psm['crumb'] == '数据汇集'
-         and _psm['crumbHome'] == '工作台' and _psm['steps'] == 5
+         and _psm['crumbHome'] == '工作台' and _psm['steps'] == 4
          and _psm['picker'] is True
          and _psm['toast'] is not None and '智能分析' in _psm['toast']
          and _psm['navCur'] == 0 and _psm['navSmart'] == 0, _psm)

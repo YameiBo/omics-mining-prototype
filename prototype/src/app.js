@@ -3283,8 +3283,7 @@ var PAGES = {
    这条线的第 5 步与项目详情那一层从此是同一份内容，改一处两边都变。 */
 var STEPS = [
   ['数据汇集', 'p02'], ['流程模板', 'p04'],
-  ['参数配置', 'p05'], ['任务运行', 'p06'],
-  ['查看分析结果', 'p07']
+  ['任务运行', 'p06'], ['查看分析结果', 'p07']
 ];
 
 function currentPage() {
@@ -8694,7 +8693,7 @@ function commitSaveFlow() {
   $('#modal').hidden = true;
   setOrchMode('flows');          /* 列表切回「流程模板」，新模板才看得见 */
   toast('已另存为新模板「' + f.n + '」，可在左侧流程模板列表中选中', 'ok');
-  if (wantRun) { SAVE_RUN = false; goto('p05'); }
+  if (wantRun) { SAVE_RUN = false; goto('p06'); }
   SAVE_RUN = false;
 }
 
@@ -8702,7 +8701,7 @@ function commitSaveFlow() {
    不提醒的话，这次改动会随着离开页面悄悄丢掉，而用户以为跑的就是眼前这条。 */
 function runOrchFlow() {
   if (!CANVAS.nodes.length) { toast('画布是空的，先从左侧选一条流程模板', 'warn'); return; }
-  if (!orchDirty()) { goto('p05'); return; }
+  if (!orchDirty()) { goto('p06'); return; }
   var base = orchFlowById(CANVAS.base);
   showModal('流程有未保存的改动',
     '<p class="text-[13px]">当前画布是在「<b>' + esc(base ? base.n : '自编排流程')

@@ -1199,7 +1199,7 @@
          绑在一起，拼成字符串就得把里面的引号转义一遍，改一次错一次。
          页头（步骤 5/5 · P-07 · stepper）不在这里 —— 两个宿主的页头各不相同，
          各由自己的宿主给（项目详情走 renderProjHead，第 5 步走页面里的 .phead）；
-         「运行详情 / 导出结果」两颗按钮留在这块内容里 —— 它们属于结果本身，
+         「查看报告详情 / 导出结果」两颗按钮留在这块内容里 —— 它们属于结果本身，
          不属于任一页头，两个宿主都该有。
     ═══════════════════════════════════════════════════════════ -->
     <template id="panoTpl">
@@ -1216,7 +1216,7 @@
               <button class="seg__b" data-view="align" role="tab" aria-selected="false">跨组学对齐</button>
             </div>
             <span class="row ml-auto">
-              <button type="button" class="btn btn--sm" data-drawer="trace"><i class="fa-solid fa-code-branch ico"></i>运行详情</button>
+              <button type="button" class="btn btn--sm" data-report-open><i class="fa-solid fa-file-lines ico"></i>查看报告详情</button>
               <button type="button" class="btn btn--sm" data-dl="resultzip"><i class="fa-solid fa-download ico"></i>导出结果</button>
             </span>
           </div>

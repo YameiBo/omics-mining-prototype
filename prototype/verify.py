@@ -2727,7 +2727,19 @@ DRIVE = r"""
     })();
     R.projPano.charts    = qa('#panoMount .chartbox svg.chart').length;         /* 期望 >0 */
     R.projPano.mountDl   = qa('#panoMount [data-dl]').length;                   /* 导出入口 */
-    R.projPano.mountTrace = qa('#panoMount [data-drawer]').length;              /* 运行详情 */
+    R.projPano.mountTrace = qa('#panoMount [data-drawer]').length;              /* 旧运行详情入口（应为 0） */
+    R.projPano.mountReport = qa('#panoMount [data-report-open]').length;         /* 查看报告详情 */
+    /* 点「查看报告详情」→ 弹窗内 iframe 预览 PDF（blob:） */
+    q('#panoMount [data-report-open]').click(); await sleep(420);
+    R.reportPrev = {
+      open: !q('#modal').hidden,
+      title: txt(q('#modalT')),
+      iframe: !!q('#modal .report-frame'),
+      src: (q('#modal .report-frame') || {}).src || '',
+      dl: !!q('#modal [download]')
+    };
+    q('#modal [data-close="modal"]').click(); await sleep(200);
+    R.reportPrev.closed = q('#modal').hidden;
     R.projPano.stepsShown = !q('#projSteps').hidden;
     R.projPano.tabsHidden = q('#projTabs').hidden;
     /* v45 反向：从全景那一格换到别的模块，那颗按钮要**自己回来** ——
@@ -5986,9 +5998,10 @@ try:
     # assetAbs() 查表落空后静默退回 assets/xxx 相对路径：本地旁边有
     # assets/ 目录照样出图，只有分发成单文件才整片裂。
     # 这里断两件事：① 映射表键名完好且每条查得到；② 封面真的解码出了尺寸。
-    need('封面映射表键名完好：6 条全为 assets/ 相对路径（build 不得替换键名）',
-         _pi['imgUriKeyAllPath'] is True and len(_pi['imgUriKeys']) == 6
+    need('映射表键名完好：7 条（6 图 + 1 报告）全为 assets/ 相对路径（build 不得替换键名）',
+         _pi['imgUriKeyAllPath'] is True and len(_pi['imgUriKeys']) == 7
          and sorted(_pi['imgUriKeys']) == sorted([
+             'assets/analysis-report.pdf',
              'assets/avatar-clinician.jpg', 'assets/avatar-engineer.jpg',
              'assets/dataset-rnaseq.jpg', 'assets/dataset-singlecell.jpg',
              'assets/dataset-wgs.jpg', 'assets/hero-genomics.jpg']),
@@ -6445,8 +6458,12 @@ try:
     need('「查看项目结果全景」在本页内落到结果全景模块（不跳独立页，左栏高亮同步）',
          pp['stayHere'] and pp['navOn'] == '结果全景' and pp['mount']
          and pp['views'] == 6 and pp['segBtns'] == 6 and pp['charts'] > 0
-         and pp['mountDl'] >= 1 and pp['mountTrace'] >= 1
+         and pp['mountDl'] >= 1 and pp['mountReport'] == 1 and pp['mountTrace'] == 0
          and pp['stepsShown'] and pp['tabsHidden'], pp)
+    _rpv = d['reportPrev']
+    need('结果全景「查看报告详情」弹出报告预览（PDF iframe，可下载）',
+         _rpv['open'] and _rpv['title'] == '分析报告详情' and _rpv['iframe']
+         and _rpv['src'].startswith('blob:') and _rpv['dl'] and _rpv['closed'], _rpv)
     # v45 需求：人已经站在全景那一格时，页头那颗指向自己的按钮不该还挂着。
     # 断的是「按钮真的看不见」而不是「DOM 里没有」——它现在是常驻 + hidden 隐去，
     # 所以既读 hidden 也读实际宽度（宽度为 0 才证明 CSS 那条 [hidden] 兜底真的生效；

@@ -4243,6 +4243,7 @@ document.addEventListener('click', function (e) {
     }
     return;
   }
+  if (e.target.closest('[data-report-open]')) { openReport(); return; }
   if (e.target.closest('[data-lin-fold]')) { toggleLinFold(); return; }
   if (e.target.closest('[data-lin-axis]')) { toggleLinAxis(); return; }
   if (e.target.closest('[data-lin-clear]')) { linFocus(''); return; }
@@ -10435,6 +10436,35 @@ function renderArch() {
   syncSampDrawerHead();
   /* 这里**不**自动打开抽屉：进来先看列表，选中哪一例才滑出详情。
      自动展开会一进门就盖住半屏，而且刷新一次就多一次滑入动画。 */
+}
+
+/* ---------- v69：结果全景「查看报告详情」 ----------
+   分析报告 PDF 由 build 内联进 IMG_URI 映射表（键为 assets 下的分析报告文件），
+   运行时转成 Blob URL 再塞进 iframe —— 直接拿 data: 当 iframe.src 在部分浏览器会被拦。 */
+var REPORT_URL = '';
+function reportBlobUrl() {
+  if (REPORT_URL) return REPORT_URL;
+  /* 键名分两段拼：build 会把「assets/xxx.pdf」整体替换成 data URI，
+     直写全路径会让本行被替换成 4.7MB 的 base64（v59 同类坑）。 */
+  var key = 'assets/' + 'analysis-report.pdf';
+  var uri = (window.IMG_URI || {})[key];
+  if (!uri) return '';
+  try {
+    var b64 = uri.split(',')[1] || '';
+    var bin = atob(b64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    REPORT_URL = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+  } catch (e) { REPORT_URL = ''; }
+  return REPORT_URL;
+}
+function openReport() {
+  var url = reportBlobUrl();
+  if (!url) { toast('报告文件缺失，暂无法预览', 'warn'); return; }
+  showModal('分析报告详情',
+    '<div class="report-preview"><iframe class="report-frame" src="' + url + '" title="分析报告预览"></iframe></div>'
+    + '<p class="text-[12px] text-ink3 mt-2">分析报告 · 差异表达分析 · TJ-TCM-2026 队列 · 71 例共同样本。可在上方直接浏览，或下载原件。</p>',
+    '<a class="btn" href="' + url + '" download="分析报告.pdf">' + ico('download') + '下载报告</a>'
+    + '<button type="button" class="btn btn--primary" data-close="modal">关闭</button>');
 }
 
 /* ---------- 弹窗：登记新样本 ----------

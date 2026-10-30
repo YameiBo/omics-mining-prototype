@@ -101,7 +101,9 @@ const IMG = {
   'assets/dataset-singlecell.jpg': 'https://images.unsplash.com/photo-1576086213369-97a306d36557?w=640&h=640&fit=crop&q=82&fm=jpg&auto=format',
   'assets/dataset-wgs.jpg': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=640&h=400&fit=crop&q=82&fm=jpg&auto=format',
   'assets/avatar-clinician.jpg': 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=192&h=192&fit=crop&crop=faces&q=86&fm=jpg&auto=format',
-  'assets/avatar-engineer.jpg': 'https://images.unsplash.com/photo-1615109398623-88346a601842?w=192&h=192&fit=crop&crop=faces&q=86&fm=jpg&auto=format'
+  'assets/avatar-engineer.jpg': 'https://images.unsplash.com/photo-1615109398623-88346a601842?w=192&h=192&fit=crop&crop=faces&q=86&fm=jpg&auto=format',
+  /* 结果全景「查看报告详情」的内嵌分析报告（PDF）：CDN 版同样内联，避免外链 */
+  'assets/analysis-report.pdf': ''
 };
 
 /* ---------- 4. 离线版 ---------- */
@@ -145,7 +147,8 @@ let offline = htmlRaw;
    所以这里只埋 <!--INJECT_IMG_URI--> 占位，替换完再回填。 */
 /* 构建期就致命的问题要立刻报出来 —— 第 5 步的 problems 数组那时才创建 */
 const problemsEarly = [];
-const imgMime = (k) => /\.png$/i.test(k) ? 'image/png' : 'image/jpeg';
+const imgMime = (k) => /\.pdf$/i.test(k) ? 'application/pdf'
+  : /\.png$/i.test(k) ? 'image/png' : 'image/jpeg';
 const IMG_DATA = {};
 for (const k of Object.keys(IMG)) {
   const abs = path.join(ROOT, k);
@@ -156,6 +159,8 @@ for (const k of Object.keys(IMG)) {
    运行时那串相对路径没有任何东西会替换它 → CDN 版封面同样图裂。 */
 const IMG_REMOTE = {};
 for (const [local, remote] of Object.entries(IMG)) IMG_REMOTE[local] = remote;
+/* 本地 PDF 没有远程源：CDN 版也直接用内联数据，保证预览可用 */
+if (IMG_DATA['assets/analysis-report.pdf']) IMG_REMOTE['assets/analysis-report.pdf'] = IMG_DATA['assets/analysis-report.pdf'];
 const injectImgUri = (map) => '<script>window.IMG_URI=' + JSON.stringify(map) + ';</script>';
 
 offline = offline.replace('<!--INJECT_CSS-->', () => '<style>\n' + twCss + '\n</style>');
@@ -285,7 +290,11 @@ for (const [tag, html, wantData] of [['离线版', off, true], ['CDN 版', fs.re
   for (const k of Object.keys(IMG)) {
     if (!(k in map)) { problems.push(tag + '映射表缺少条目：' + k); continue; }
     /* 键名必须是原始相对路径 —— 被替换成 data: 就说明注入时机错了 */
-    if (map[k] && !map[k].startsWith(wantData ? 'data:image/' : 'http')) {
+    const isPdfAsset = /\.pdf$/i.test(k);
+    const valOk = isPdfAsset
+      ? String(map[k]).startsWith('data:application/pdf')
+      : String(map[k]).startsWith(wantData ? 'data:image/' : 'http');
+    if (map[k] && !valOk) {
       problems.push(tag + '映射表值异常（' + k + '）：' + String(map[k]).slice(0, 40));
     }
   }

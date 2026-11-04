@@ -1269,7 +1269,7 @@ function renderDemoSet() {
   var ph = $('#pubdsPerm'), pr = $('#pubdsPermRole');
   if (ph) ph.hidden = canSet;
   if (pr) pr.textContent = roleName();
-  $$('[data-pds-all], [data-pds-reset]').forEach(function (b) {
+  $$('[data-pds-all]').forEach(function (b) {
     b.disabled = !canSet;
     b.title = canSet ? '' : '当前身份（' + roleName() + '）不能修改示例数据集配置：需「超级管理员」';
   });
@@ -1281,6 +1281,19 @@ function renderDemoSet() {
 
 /* 改动落到数据上，再由页面自己重画 —— 不手动改 DOM。
    手动改 DOM 的做法（把 <img src> 直接赋新值）一旦哪天多一处渲染就漏了。 */
+/* 出厂复位：界面上的「恢复默认」按钮已撤（v2.15），但内部保留复位入口 ——
+   验证脚本与截图复用需要把用例改过的示例数据集恢复原状。 */
+function demoDsReset() {
+  DEMO_DS.forEach(function (d, i) {
+    var def = DEMO_DS_DEF[i] || {};
+    d.n = def.n || d.n;
+    d.intro = def.intro == null ? '' : def.intro;
+    d.img = def.img || '';
+    d.show = def.show !== false;
+  });
+  renderDemoSet();
+}
+
 function demoSet(id, patch, msg) {
   var d = pubDsById(id);
   if (!d) return;
@@ -4441,7 +4454,7 @@ document.addEventListener('click', function (e) {
   /* v54：示例数据集展示配置是**平台级权限**（只有超级管理员）。委托里统一挡一次 ——
      视觉态只是 disabled，脚本、键盘与将来别处冒出来的入口都会绕过它。
      这五类动作共用一道：开关 / 全部显示隐藏 / 恢复默认 / 上传封面 / 清除封面。 */
-  if ((t = e.target.closest('[data-pds-toggle], [data-pds-all], [data-pds-reset], [data-pds-up], [data-pds-clr]'))
+  if ((t = e.target.closest('[data-pds-toggle], [data-pds-all], [data-pds-up], [data-pds-clr]'))
       && !canConfig()) {
     toast('当前身份（' + roleName() + '）不能修改示例数据集配置：需「超级管理员」', 'warn');
     return;
@@ -4457,18 +4470,6 @@ document.addEventListener('click', function (e) {
     DEMO_DS.forEach(function (d) { d.show = on0; });
     renderDemoSet();
     toast(on0 ? '9 条示例数据集已全部显示' : '9 条示例数据集已全部隐藏，前台卡片同步收起', 'ok');
-    return;
-  }
-  if (e.target.closest('[data-pds-reset]')) {
-    DEMO_DS.forEach(function (d, i) {
-      var def = DEMO_DS_DEF[i] || {};
-      d.n = def.n || d.n;
-      d.intro = def.intro == null ? '' : def.intro;
-      d.img = def.img || '';
-      d.show = def.show !== false;
-    });
-    renderDemoSet();
-    toast('已恢复出厂设置：名称、简介与显示状态全部复原', 'ok');
     return;
   }
   if ((t = e.target.closest('[data-pds-up]'))) {
@@ -12332,6 +12333,7 @@ function init() {
   };
   /* 阈值与上下文暴露给验证脚本：界面上的展示值必须与常量一致 */
   window.__thresholds = function () { return THRESHOLDS; };
+  window.__pubdsReset = demoDsReset;
   /* 导出要能被验证脚本从外面打开并读到真内容：点按钮只能证明「弹了框」，
      证不了产出的文件里到底有什么。__dlKeys() 列全部入口，__dlOpen() 弹确认框，
      __dlBuild() 直接取内容，__dlBytes() 取二进制（ZIP 用 base64 带出来）。 */

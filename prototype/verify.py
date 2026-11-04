@@ -401,7 +401,7 @@ DRIVE = r"""
     window.__goRaw('pubds'); await sleep(240);
     const pdsProbe = () => ({
       togglesOff: qa('#pubdsList [data-pds-toggle]').filter(x => x.disabled).length,
-      toolsOff: qa('[data-pds-all], [data-pds-reset]').filter(x => x.disabled).length,
+      toolsOff: qa('[data-pds-all]').filter(x => x.disabled).length,
       hint: (function () { const h = q('#pubdsPerm'); return !h || h.hidden ? '' : txt(h); })(),
       who: txt(q('#pubdsWho'))
     });
@@ -2430,8 +2430,8 @@ DRIVE = r"""
     /* ④ 一键全隐藏 → 三组前台卡片都清空（而不是「改完还剩几张」） */
     q('[data-pds-all="0"]').click(); await sleep(260);
     R.pubdsAllOff = window.__pubds();
-    /* ⑤ 恢复默认 → 三件设置一并复原，前台卡片数回到起点 */
-    q('[data-pds-reset]').click(); await sleep(280);
+    /* ⑤ 复位（按钮已撤，走内部接口）→ 三件设置一并复原，前台卡片数回到起点 */
+    window.__pubdsReset(); await sleep(280);
     R.pubdsReset = window.__pubds();
 
     /* ---- 面包屑：主流程页给「步骤 n/4」，且与左栏当前项同源 ----
@@ -5995,7 +5995,7 @@ try:
          _pa['shown'] == 0 and _pa['hidden'] == '9 条已隐藏'
          and (_pa['frontOwn'], _pa['frontHuman'], _pa['frontMouse']) == (0, 0, 0)
          and _pa['count'] == '显示 0 / 9 条', _pa)
-    need('恢复默认：名称 / 显示 / 简介一并复原，前台卡片数回到起点',
+    need('内置复位接口：名称 / 显示 / 简介一并复原，前台卡片数回到起点',
          _pr['shown'] == 9 and _pr['checked'] == 9
          and '【验证】' not in ''.join(_pr['intros']) and '【验证】' not in ''.join(_pr['names'])
          and (_pr['frontOwn'], _pr['frontHuman'], _pr['frontMouse']) == (3, 3, 3)
@@ -7397,7 +7397,7 @@ try:
     _pA, _pS = d['pdsAdmin'], d['pdsSuper']
     need('示例数据集配置：超级管理员可改；普通管理员进来是只读（9 个开关 + 3 颗工具条按钮全禁用）',
          _pS['togglesOff'] == 0 and _pS['toolsOff'] == 0 and _pS['hint'] == ''
-         and _pA['togglesOff'] == 9 and _pA['toolsOff'] == 3 and _pA['hint'] != '', (_pA, _pS))
+         and _pA['togglesOff'] == 9 and _pA['toolsOff'] == 2 and _pA['hint'] != '', (_pA, _pS))
     # ---------- v56：文件管理 · 系统文件也能上传（超级管理员） ----------
     # 判据分三层，缺一层就说明只改了按钮外观：
     #   ① 能力位：谁 canWrite（普通管理员也不行 —— 系统文件是平台级资产，

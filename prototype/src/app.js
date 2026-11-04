@@ -1092,7 +1092,7 @@ function demoDsFix(d) {
 }
 var DEMO_DS = SAMPLE_DS.concat(PUB_DS).map(demoDsFix);
 /* 出厂值快照（「恢复默认」按钮复原到这里 —— 没有它，「默认」就只是个说法） */
-var DEMO_DS_DEF = DEMO_DS.map(function (d) { return { intro: d.intro, img: d.img, show: d.show }; });
+var DEMO_DS_DEF = DEMO_DS.map(function (d) { return { n: d.n, intro: d.intro, img: d.img, show: d.show }; });
 function pubDsById(id) { return DEMO_DS.filter(function (d) { return d.id === id; })[0]; }
 function shownDemo(sp) { return DEMO_DS.filter(function (d) { return d.show && (!sp || d.sp === sp); }); }
 
@@ -1217,17 +1217,12 @@ function renderDemoSet() {
   var dis = canSet ? '' : ' disabled';
   var why = canSet ? '' : ' title="当前身份（' + roleName() + '）不能修改示例数据集配置：需「超级管理员」"';
   box.innerHTML = DEMO_DS.map(function (d) {
-    var opts = '<option value=""' + (d.img ? '' : ' selected') + '>不使用封面</option>'
-      + DEMO_IMGS.map(function (im) {
-          return '<option value="' + esc(im.v) + '"'
-            + (d.img === im.v ? ' selected' : '') + '>' + esc(im.n) + '</option>';
-        }).join('');
     return '<div class="card pubdsr' + (canSet ? '' : ' is-ro') + '" data-pdsrow="' + esc(d.id) + '">'
       + '<div class="card__bd row align-start gap-4">'
-      +   '<div class="pubdsr__pv">' + demoCoverPreview(d) + '</div>'
       +   '<div class="pubdsr__bd">'
       +     '<div class="pubdsr__hd">'
-      +       '<span class="pubdsr__n">' + esc(d.n) + '</span>'
+      +       '<input class="inp pubdsr__name" data-pds-name="' + esc(d.id) + '" value="' + esc(d.n) + '"'
+      +         ' placeholder="数据集名称" aria-label="数据集名称"' + dis + why + '>'
       +       '<span class="tag">' + (d.sp === 'own' ? '院内队列' : spLabel(d.sp)) + '</span>'
       +       '<span class="text-[11.5px] text-ink3 num">' + esc(d.meta) + '</span>'
       +       '<label class="sw ml-auto"' + why + '><input type="checkbox" data-pds-toggle="' + esc(d.id) + '"'
@@ -1238,16 +1233,6 @@ function renderDemoSet() {
       +       '<textarea class="inp inp--ta" id="intro-' + esc(d.id) + '" rows="2"'
       +       ' data-pds-intro="' + esc(d.id) + '" placeholder="一句话说明这个数据集能用来做什么"' + dis + why + '>'
       +       esc(d.intro) + '</textarea></div>'
-      +     '<div class="fld"><label class="fld__l" for="img-' + esc(d.id) + '">封面</label>'
-      +       '<div class="row">'
-      +         '<select class="sel" id="img-' + esc(d.id) + '" data-pds-img="' + esc(d.id) + '"' + dis + why + '>' + opts + '</select>'
-      +         '<button type="button" class="btn btn--sm" data-pds-up="' + esc(d.id) + '"' + dis + why + '>'
-      +           ico('upload') + '上传本地图片</button>'
-      +         '<button type="button" class="btn btn--sm btn--quiet" data-pds-clr="' + esc(d.id) + '"'
-      +           (d.img ? '' : ' aria-disabled="true"') + dis + why + '>' + ico('xmark') + '清除封面</button>'
-      +       '</div>'
-      +       '<input type="file" class="sr" accept="image/*" data-pds-file="' + esc(d.id) + '"' + dis + '>'
-      +     '</div>'
       +   '</div>'
       + '</div></div>';
   }).join('');
@@ -3098,6 +3083,7 @@ window.__kb2Reset = function () {
      截图用例拍到「隐藏了 3 条」的公开数据集卡，下一条用例会平白无故变红。 */
   DEMO_DS.forEach(function (d, ix) {
     var def = DEMO_DS_DEF[ix] || {};
+    d.n = def.n || d.n;
     d.intro = def.intro == null ? '' : def.intro;
     d.img = def.img || '';
     d.show = def.show !== false;
@@ -4329,12 +4315,12 @@ document.addEventListener('click', function (e) {
     }
     return;
   }
-  /* 查看项目结果全景（v28；v42 改落点；v44 恢复）：不跳「智能分析 › 结果全景」那个独立页
+  /* 查看可视化报告（v28；v42 改落点；v44 恢复）：不跳「智能分析 › 结果全景」那个独立页
      （已撤），而是在**本页内**换到「分析结果 › 结果全景」那一格 —— 不把人送出项目层。 */
   if ((t = e.target.closest('[data-proj-pano]'))) {
     var pp = projById(t.getAttribute('data-proj-pano'));
     if (pp) {
-      if (!pp.on) { setCurProj(pp.id); toast('已切换到「' + pp.n + '」，正在查看其结果全景', 'ok'); }
+      if (!pp.on) { setCurProj(pp.id); toast('已切换到「' + pp.n + '」，正在查看其可视化报告', 'ok'); }
       var pmo = pdtModules(pp);
       if (pmo.length) setProjMod(pmo.length - 1);
     }
@@ -4466,12 +4452,13 @@ document.addEventListener('click', function (e) {
   if (e.target.closest('[data-pds-reset]')) {
     DEMO_DS.forEach(function (d, i) {
       var def = DEMO_DS_DEF[i] || {};
+      d.n = def.n || d.n;
       d.intro = def.intro == null ? '' : def.intro;
       d.img = def.img || '';
       d.show = def.show !== false;
     });
     renderDemoSet();
-    toast('已恢复出厂设置：简介、封面与显示状态全部复原', 'ok');
+    toast('已恢复出厂设置：名称、简介与显示状态全部复原', 'ok');
     return;
   }
   if ((t = e.target.closest('[data-pds-up]'))) {
@@ -4651,6 +4638,12 @@ document.addEventListener('change', function (e) {
   /* 示例数据集（v40）：简介用 change 而不是 input ——
      input 每敲一个字就整页重画一次，输入框会被重建成新节点，光标直接飞走。
      change 在失焦那一刻才提交，正好是「这句话写完了」的时机。 */
+  var pnm = e.target.getAttribute && e.target.getAttribute('data-pds-name');
+  if (pnm) {
+    var nmv = String(e.target.value || '').trim();
+    if (!nmv) { toast('数据集名称不能为空', 'warn'); e.target.value = (pubDsById(pnm) || {}).n || ''; return; }
+    demoSet(pnm, { n: nmv }, '名称已更新'); return;
+  }
   var pi = e.target.getAttribute && e.target.getAttribute('data-pds-intro');
   if (pi) { demoSet(pi, { intro: e.target.value }, '简介已更新'); return; }
   /* 本地封面：FileReader 读成 dataURL。原型没有后端，这是让「上传」这件事
@@ -5887,7 +5880,7 @@ function projFlows(p) {
    （6 个视图 + 视图切换条），由 mountPano() 从 #panoTpl 克隆进来。
    v51：同一个 mountPano() 也给智能分析第 5 步用（宿主 #resMount），
    所以「克隆进当前这一屏」这句话对两个宿主都成立、且只会有一个在文档里。 */
-var PANO_MOD = '结果全景';
+var PANO_MOD = '可视化报告';
 /* 全景页此刻是哪个视图（variant / de / enrich / prot / metab / align）。
    入口可以带视图进来 —— 在「差异表达」那一行点「查看结果」，进去就该是差异表达视图。
    它必须活在模块页之外：模块页每次都整块重画，状态挂在自己身上会丢。 */
@@ -6017,7 +6010,7 @@ function renderProjTitle() {
   markProjPano();
 }
 
-/* v45：页头那颗「查看项目结果全景」在**已经落在结果全景那一格**时隐去。
+/* v45：页头那颗「查看可视化报告」在**已经落在结果全景那一格**时隐去。
    它做的事是「跳到末模块」，而末模块此刻正开着（v44 起页头标题也是它）——
    再摆一颗指向自己的按钮，点下去什么都不发生，看着像坏了。
    判据取「当前位置」而不是「按钮文字」：流程末节点本身是出图/报告类时
@@ -6065,7 +6058,6 @@ function renderProjHead(pid) {
     /* v37：不再有「设为当前项目」按钮对，改成把项目状态摆在操作条首位。
        v39：这一条从抽屉里搬到了页头 —— 页面比抽屉更需要「一眼看到结论」。 */
     ac.innerHTML = '<span class="pd__st">' + ico('circle-info') + '项目状态' + projStTag(p.st) + '</span>'
-      + '<button type="button" class="btn btn--sm" data-proj-share="' + p.id + '">' + ico('share-nodes') + '分享此项目</button>'
       /* v42 撤掉「运行记录」那一颗：运行记录在「分析执行 › 运行记录」里本来就有，
          页头这颗只是又一个入口。撤按钮前先问「谁在借它的去处」—— 它跳的是全局运行日志，
          那条路在左栏还留着，所以撤得掉、也撤得干净。 */
@@ -6076,7 +6068,7 @@ function renderProjHead(pid) {
       /* v45：这一颗在**已经落在结果全景那一格**时由 markProjPano() 隐去 ——
          它做的事就是「跳到末模块」，而末模块此刻正开着，点它什么都不发生。 */
       + (st.log.length
-          ? '<button type="button" class="btn btn--sm" id="projPanoBtn" data-proj-pano="' + p.id + '">' + ico('chart-column') + '查看项目结果全景</button>'
+          ? '<button type="button" class="btn btn--sm" id="projPanoBtn" data-proj-pano="' + p.id + '">' + ico('chart-column') + '查看可视化报告</button>'
           : '');
   }
   /* 重画之后按钮是新节点（新节点默认没有 hidden），紧接着补一次显隐：
@@ -11551,7 +11543,7 @@ var DL = {
   },
   resultzip: {
     name: 'T-2409-018_result.zip', fmt: 'ZIP', mime: 'application/zip',
-    src: '项目详情 › 分析结果 › 结果全景（图与数据表）',
+    src: '项目详情 › 分析结果 › 可视化报告（图与数据表）',
     build: function () {
       /* v42：结果全景从独立页搬进了项目详情层的模块页，导出源跟着走 ——
          读挂载容器，不读页面 id。没进那一页时容器不存在，返回 null。 */
@@ -11589,7 +11581,7 @@ var DL = {
                note: '含 ' + nImg + ' 张图（SVG）与 ' + nTbl + ' 张数据表（TSV）' };
     }
   },
-  patho:   { name: 'pathogenic_variants.tsv', fmt: 'TSV', src: '结果全景 › 基因变异 › 高等级变异清单', total: 111,
+  patho:   { name: 'pathogenic_variants.tsv', fmt: 'TSV', src: '可视化报告 › 基因变异 › 高等级变异清单', total: 111,
              build: function (b) { return dlFromTable(b, 111, null, '#pathoTbl'); } },
   diffgenes: { name: 'diff_genes.tsv', fmt: 'TSV', src: '结果全景 › 差异表达 › 差异基因清单', total: 1247,
              build: function (b) { return dlFromTable(b, 1247, null, '#diffGeneTbl'); } },
@@ -12092,6 +12084,7 @@ function init() {
       rows: $$('#pubdsList .pubdsr').length,
       toggles: $$('#pubdsList [data-pds-toggle]').length,
       checked: $$('#pubdsList [data-pds-toggle]').filter(function (i) { return i.checked; }).length,
+      names: $$('#pubdsList [data-pds-name]').map(function (x) { return x.value; }),
       intros: $$('#pubdsList [data-pds-intro]').map(function (x) { return x.value; }),
       imgs: $$('#pubdsList [data-pds-img]').map(function (s) { return s.value; }),
       covers: $$('#pubdsList .pubdsr__im').length,

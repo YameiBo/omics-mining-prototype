@@ -2414,12 +2414,11 @@ DRIVE = r"""
       card: txt(q('#dsGroup-own [data-pick="转录组表达矩阵"] .dcard__h')),
       store: window.__pubds().intros[1]
     };
-    /* ③ 封面：给一条原本没封面的公开数据集配上封面 → 数据汇集页多一张 <img> */
-    window.__pubds({ id: 'gtex-liver', img: 'img:rnaseq' }); await sleep(240);
-    R.pubdsCover = {
-      init: R.pubdsInit.frontHumanImg,
-      now: qa('#pubGrid-human .dcard .dcard__im').length,
-      preview: qa('#pubdsList .pubdsr__im').length
+    /* ③ 名称：改名 → 设置页输入框与数据源同步 */
+    window.__pubds({ id: 'own-rna', n: '【验证】改过的名称' }); await sleep(240);
+    R.pubdsName = {
+      store: window.__pubds().names[1],
+      input: (q('#pubdsList [data-pds-name="own-rna"]') || {}).value || ''
     };
     /* ④ 一键全隐藏 → 三组前台卡片都清空（而不是「改完还剩几张」） */
     q('[data-pds-all="0"]').click(); await sleep(260);
@@ -2520,7 +2519,7 @@ DRIVE = r"""
          .mrow，不限定容器就会把两屏的格子加起来（实测 4+3=7 格跨 2 行）。 */
       stats: qa('#pdt-info .mrow .mcell').map(m => txt(m.querySelector('.mcell__v'))),
       statN: qa('#pdt-info .mrow .mcell').length,      /* 期望 4 */
-      actN: qa('#projActs .btn').length,                /* v44 期望 2：分享 + 全景（v42 撤了运行记录） */
+      actN: qa('#projActs .btn').length,                /* v71 期望 1：只剩可视化报告（分享已撤） */
       /* v45：全景那一颗**常驻 DOM、靠 hidden 显隐**（从「渲不渲染」换成「切 hidden」，
          免得重画操作条时把旁边那排状态徽章一起闪）。所以这里必须按**可见性**量：
          数 `#projActs [data-proj-pano]` 的命中数恒为 1，按钮藏了断言也照绿。
@@ -2688,11 +2687,11 @@ DRIVE = r"""
     cardOf('P-2026-001').querySelector('[data-proj-open]').click(); await sleep(380);
     R.projPano = {
       panoN: window.__projDetail().panoN,                              /* 期望 1：还在项目概况栏 */
-      actBtns: qa('#projActs .btn').length,                            /* 期望 2：分享 + 全景 */
+      actBtns: qa('#projActs .btn').length,                            /* 期望 1：可视化报告 */
       actTxt: qa('#projActs .btn').map(txt),
       gologInActs: qa('#projActs [data-proj-golog]').length            /* 期望 0 */
     };
-    R.projPano.actTxtHasPano = R.projPano.actTxt.some(s => s.indexOf('全景') >= 0);  /* 期望 true */
+    R.projPano.actTxtHasPano = R.projPano.actTxt.some(s => s.indexOf('可视化') >= 0);  /* 期望 true */
     R.projPano.mods = window.__projDetail().mods;
     R.projPano.lastName = R.projPano.mods[R.projPano.mods.length - 1] || '';
     q('#projActs [data-proj-pano]').click(); await sleep(420);
@@ -3473,35 +3472,6 @@ DRIVE = r"""
     R.pgDeletedRow = qa('#pgBody tr[data-pgrow]').length;
     /* 收尾：身份复位、排序复位、搜索与勾选清空 —— 后面的截图要的是默认长相 */
     window.__pg({ role: 'super', sort: 0, q: '', sel: [] }); await sleep(300);
-
-    /* 分享：链接含项目编号且**确定性**（改有效期不许换链接） */
-    q('[data-proj-share]').click(); await sleep(280);
-    R.projShare = {
-      open: !q('#modal').hidden,
-      title: txt(q('#modalT')),
-      url: txt(q('#shareUrl')),
-      days: qa('#modalB [data-share-days]').length,     /* 期望 3 */
-      roles: qa('#modalB [data-share-role]').length,    /* 期望 3 */
-      dayOn: txt(q('#modalB [data-share-days].is-on')),
-      roleOn: txt(q('#modalB [data-share-role].is-on')),
-      members: qa('#modalB .tbl tbody tr').length,      /* 期望 3 */
-      copyInline: !!q('#modalB [data-share-copy]'),
-      done: !!q('#modalF [data-share-done]')
-    };
-    q('#modalB [data-share-days="30"]').click(); await sleep(240);
-    R.projShareDay = {
-      dayOn: txt(q('#modalB [data-share-days].is-on')),
-      urlSame: txt(q('#shareUrl')) === R.projShare.url,   /* 期望 true */
-      roleOn: txt(q('#modalB [data-share-role].is-on'))
-    };
-    q('#modalB [data-share-role="可评论"]').click(); await sleep(240);
-    R.projShareRole = {
-      roleOn: txt(q('#modalB [data-share-role].is-on')),
-      dayOn: txt(q('#modalB [data-share-days].is-on')),
-      urlSame: txt(q('#shareUrl')) === R.projShare.url
-    };
-    q('#modalF [data-share-done]').click(); await sleep(260);
-    R.projShareCopy = { closed: q('#modal').hidden, toast: txt(qa('.toast').slice(-1)[0]) };
 
     /* 智能体数字必须跟着新建走：写死「13 个项目」的话这里会露馅。
        v53：会话唯一宿主是主页问答卡，读 #wbAgentBody。 */
@@ -4513,7 +4483,7 @@ try:
         '65-pd-sample.png': 'projdetail', '66-pd-run.png': 'projdetail',
         '69-pd-dataset.png': 'projdetail',
         '70-pd-rail.png': 'projdetail', '71-pd-mod.png': 'projdetail',
-        '30-proj-new.png': 'proj', '31-proj-share.png': 'proj',
+        '30-proj-new.png': 'proj',
         '18-orch-canvas.png': 'p04', '19-orch-tools.png': 'p04', '20-tool-drawer.png': 'p04',
         '21-hist-drawer.png': 'p04', '22-agent.png': 'p01', '23-orch-ext.png': 'p04', '23b-orch-full.png': 'p04',
         '32-samp-cross.png': 'gene', '33-samp-lineage.png': 'gene',
@@ -4698,9 +4668,6 @@ try:
     shot("30-proj-new.png",
          "window.__go('proj');"
          "setTimeout(()=>{document.querySelector('[data-proj-new]').click();},280)")
-    shot("31-proj-share.png",
-         "setTimeout(()=>{document.querySelector('[data-close=\"modal\"]').click();},60);"
-         "setTimeout(()=>{document.querySelector('[data-proj-share]').click();},280)")
     # 画布是可编辑的，探针在上面接过节点、存过自定义流程 —— 拍之前先还原成
     # 默认模板（f06），否则这张「流程模板 + 画布」的定妆照拍的是探针的残留状态。
     # 还要顺手关掉 31-proj-share 留下的分享弹窗：goto() 只管收起全屏、不管浮层，
@@ -5974,11 +5941,10 @@ try:
 
     # ---- v40 需求 2：系统管理 › 示例数据集（显示 / 简介 / 封面）----
     _pi, _ph, _pn, _pc, _pa, _pr = (d['pubdsInit'], d['pubdsHide'], d['pubdsIntro'],
-                                    d['pubdsCover'], d['pubdsAllOff'], d['pubdsReset'])
-    need('示例数据集设置页：9 条内置数据集逐条可设（显示开关 / 简介 / 封面三件）',
+                                    d['pubdsName'], d['pubdsAllOff'], d['pubdsReset'])
+    need('示例数据集设置页：9 条内置数据集逐条可设（名称 / 显示开关 / 简介）',
          _pi['n'] == 9 and _pi['rows'] == 9 and _pi['toggles'] == 9 and _pi['checked'] == 9
-         and len(_pi['intros']) == 9 and len(_pi['imgs']) == 9
-         and _pi['covers'] == 3 and _pi['noCover'] == 6
+         and len(_pi['names']) == 9 and len(_pi['intros']) == 9
          and _pi['count'] == '显示 9 / 9 条' and _pi['hidden'] == '全部显示中'
          and _pi['cur'] == '院内队列 3 · 人类公开 3 · 小鼠公开 3'
          and (_pi['frontOwn'], _pi['frontHuman'], _pi['frontMouse']) == (3, 3, 3)
@@ -5989,8 +5955,8 @@ try:
          and _ph['sum'] == '9 条 · 显示 8 条', _ph)
     need('简介设置真实作用于前台：改院内队列的简介，工作台卡片底部那行文字跟着换',
          _pn['store'] == '【验证】改过的简介' and _pn['card'] == '【验证】改过的简介', _pn)
-    need('封面设置真实作用于前台：给原本没封面的公开数据集配封面 → 卡片多一张图',
-         _pc['now'] == _pc['init'] + 1 and _pc['preview'] == 4, _pc)
+    need('名称可编辑：设置页输入框与数据模型同步',
+         _pc['store'] == '【验证】改过的名称' and _pc['input'] == '【验证】改过的名称', _pc)
 
     # ---- v59：封面图「有 <img> 元素」≠「图能显示」----
     # v40 那条断言只数元素个数，而元素一直都在 —— 断不出图裂。
@@ -6018,12 +5984,11 @@ try:
          _pa['shown'] == 0 and _pa['hidden'] == '9 条已隐藏'
          and (_pa['frontOwn'], _pa['frontHuman'], _pa['frontMouse']) == (0, 0, 0)
          and _pa['count'] == '显示 0 / 9 条', _pa)
-    need('恢复默认：显示 / 简介 / 封面三件一并复原，前台卡片数回到起点',
+    need('恢复默认：名称 / 显示 / 简介一并复原，前台卡片数回到起点',
          _pr['shown'] == 9 and _pr['checked'] == 9
-         and '【验证】' not in ''.join(_pr['intros'])
-         and _pr['imgs'].count('img:rnaseq') == 1
+         and '【验证】' not in ''.join(_pr['intros']) and '【验证】' not in ''.join(_pr['names'])
          and (_pr['frontOwn'], _pr['frontHuman'], _pr['frontMouse']) == (3, 3, 3)
-         and _pr['frontHumanImg'] == 0 and _pr['hidden'] == '全部显示中', _pr)
+         and _pr['hidden'] == '全部显示中', _pr)
 
     need('样本管理保留但不在菜单',     d['sampleKept']['on'] and d['sampleKept']['inNav'] == 0, d['sampleKept'])
     need('派发管理已彻底移除',        d['ia']['dispatchPage'] is False
@@ -6374,7 +6339,7 @@ try:
                             % (len(_pjM['mods']), _pjM['mods'][1], _pjM['mods'][3])
          and _pjM['primFlow'] and _pjM['primFlow']['id'] == 'f06'
          and not any(('输入' in m or '集合' in m) for m in _pjM['mods'])
-         and _pjM['mods'][-1] == '结果全景',
+         and _pjM['mods'][-1] == '可视化报告',
          (_pjM['modPos'], _pjM['primFlow'], _pjM['mods']))
     # 四个计数是「完成 / 运行中 / 失败 / 未运行」的模块数：和必须等于模块总数，
     # 且屏上那个「已完成」大字就是第一个计数（同一处状态不能有两个说法）。
@@ -6429,8 +6394,8 @@ try:
     # 「项目状态 + 分享此项目 + 查看项目结果全景」：状态（是什么）+ 对外动作 + 一键直达。
     # v45：全景那一颗改为**条件显示**（人已站在全景那一格时自己隐去，见下），
     # 这里量的仍是「项目概况」栏的形态 —— 期望它在。
-    need('当前项目详情：操作条 = 分享 + 全景两件（v42 撤运行记录、v44 恢复全景）',
-         pjD['onBtn'] == 0 and pjD['actN'] == 2 and pjD['panoN'] == 1
+    need('当前项目详情：操作条只剩「可视化报告」一件（分享已撤）',
+         pjD['onBtn'] == 0 and pjD['actN'] == 1 and pjD['panoN'] == 1
          and '项目状态' in pjD['stTxt'] and '成功' in pjD['stTxt']
          and 'tag--ok' in pjD['stCls'],
          (pjD['onBtn'], pjD['actN'], pjD['panoN'], pjD['stTxt'], pjD['stCls']))
@@ -6452,23 +6417,23 @@ try:
     # ③ 落进去之后左栏高亮也跟到「结果全景」（同一个状态的两面，只动一处就会左边亮 A、右边亮 B）。
     # v45 再压一层：落进全景那一格之后，这颗按钮**自己隐去** —— 它指向的正是脚下这一格。
     pp = d['projPano']
-    need('项目概况页头带「查看项目结果全景」入口（有运行记录时）',
-         pjD['actN'] == 2 and pjD['panoN'] == 1 and pp['panoN'] == 1 and pp['actTxtHasPano'],
+    need('项目概况页头带「查看可视化报告」入口（有运行记录时）',
+         pjD['actN'] == 1 and pjD['panoN'] == 1 and pp['panoN'] == 1 and pp['actTxtHasPano'],
          (pjD['actN'], pjD['panoN'], pp['panoN'], pp['actTxt']))
-    need('「查看项目结果全景」在本页内落到结果全景模块（不跳独立页，左栏高亮同步）',
-         pp['stayHere'] and pp['navOn'] == '结果全景' and pp['mount']
+    need('「查看可视化报告」在本页内落到可视化报告模块（不跳独立页，左栏高亮同步）',
+         pp['stayHere'] and pp['navOn'] == '可视化报告' and pp['mount']
          and pp['views'] == 6 and pp['segBtns'] == 6 and pp['charts'] > 0
          and pp['mountDl'] >= 1 and pp['mountReport'] == 1 and pp['mountTrace'] == 0
          and pp['stepsShown'] and pp['tabsHidden'], pp)
     _rpv = d['reportPrev']
-    need('结果全景「查看报告详情」弹出报告预览（PDF iframe，可下载）',
+    need('可视化报告「查看报告详情」弹出报告预览（PDF iframe，可下载）',
          _rpv['open'] and _rpv['title'] == '分析报告详情' and _rpv['iframe']
          and _rpv['src'].startswith('blob:') and _rpv['dl'] and _rpv['closed'], _rpv)
     # v45 需求：人已经站在全景那一格时，页头那颗指向自己的按钮不该还挂着。
     # 断的是「按钮真的看不见」而不是「DOM 里没有」——它现在是常驻 + hidden 隐去，
     # 所以既读 hidden 也读实际宽度（宽度为 0 才证明 CSS 那条 [hidden] 兜底真的生效；
     # 只读 hidden 的话，.pd__act 是 flex 容器，漏了 CSS 按钮会照样躺着、断言仍绿）。
-    need('已在「结果全景」那一格时，页头那颗按钮自己隐去（不再指向自己）',
+    need('已在「可视化报告」那一格时，页头那颗按钮自己隐去（不再指向自己）',
          pp['titleAfter'] == pp['lastName'] and pp['crumbAfter'] == pp['lastName']
          and pp['panoNAfter'] == 0 and pp['btnHidden'] is True and pp['btnW'] == 0,
          (pp['titleAfter'], pp['lastName'], pp['crumbAfter'],
@@ -6488,10 +6453,10 @@ try:
     # 入口没多（左栏里依然没有 p07 这一格，整组 off）。
     # 「页面在不在」与「左栏有没有它的项」分开断，理由和 v50 一样：
     # 拿菜单项总数当代理，总数被别的需求一改就误报。
-    need('结果全景两个宿主各就各位、左栏里依然没有它的入口',
+    need('可视化报告两个宿主各就各位、左栏里依然没有它的入口',
          pp['p07Page'] and pp['p07InNav'] == 0 and d['ia']['navP07'] == 0,
          (pp['p07Page'], pp['p07InNav'], d['ia']['navP07']))
-    need('结果全景同一时刻只在一处（互斥：另一个宿主已清空、#viewSeg 全局只有 1 个）',
+    need('可视化报告同一时刻只在一处（互斥：另一个宿主已清空、#viewSeg 全局只有 1 个）',
          pp['resCleared'] == 0 and pp['segTotal'] == 1,
          (pp['resCleared'], pp['segTotal']))
     # 撤操作条那颗按钮时，不能顺手把别人的路铲了：pdtRunPanel 里那颗同样挂
@@ -6505,7 +6470,7 @@ try:
     # 所以走 data-pano 的只剩项目详情里的两处 —— 数出来的 3 变 2。
     # 这不是「少了一个入口」，是那一个换了分支；它由 v51 那组单独守着。
     pe = d['panoEntry']
-    need('项目详情层里两处「查看结果」都在，且点了落进结果全景模块',
+    need('项目详情层里两处「查看结果」都在，且点了落进可视化报告模块',
          pe['n'] == 2 and pe['inProj'] and pe['mount'], pe)
     need('入口把视图带进项目层（工作台那一处带 de）',
          pe['view'] == 'de', pe)
@@ -6782,7 +6747,7 @@ try:
          and _pnr['nav'] == ['info', 'exec'] and _pnr['navOn'] == 'info'
          and _pnr['grpOpen']
          and len(_pnr['mods']) == 8 and _pnr['navMods'] == 8 and _pnr['marks'] == 8
-         and _pnr['mods'][0] == 'fastp 质控' and _pnr['mods'][-1] == '结果全景'
+         and _pnr['mods'][0] == 'fastp 质控' and _pnr['mods'][-1] == '可视化报告'
          and _pnr['primFlow'] == {'id': 'f06', 'n': 'RNA-seq 完整分析流程', 'nodes': 7}, _pnr)
     # v41 立的那条「没绑流程」现在界面上走不到了（见驱动器里 __projNoFlow 的注释），
     # 改由探针代跑 —— 三处一起断：左栏的分组头、执行栏的面板、模块页的空态。
@@ -6944,18 +6909,6 @@ try:
     need('左栏点击可收起可展开',     rt['offAfterClick'] and rt['appOff'] and rt['expanded'] == 'false'
                                      and rt['onAfterClick'] and rt['snavVis'], rt)
     need('左栏手势测后解锁复原',     rt['unlockedOn'], rt['unlockedOn'])
-    sh = d['projShare']
-    need('分享面板信息齐全',         sh['open'] and sh['title'] == '分享项目' and sh['days'] == 3
-                                     and sh['roles'] == 3 and sh['members'] == 3
-                                     and sh['copyInline'] and sh['done'], sh)
-    need('分享链接含项目编号',       '/s/014-' in sh['url'], sh['url'])
-    need('分享链接确定性',           d['projShareDay']['urlSame'] and d['projShareRole']['urlSame'],
-         (d['projShareDay'], d['projShareRole']))
-    need('有效期/权限可切换',        d['projShareDay']['dayOn'] == '30 天'
-                                     and d['projShareRole']['roleOn'] == '可评论',
-         (d['projShareDay']['dayOn'], d['projShareRole']['roleOn']))
-    need('复制后关闭并提示',         d['projShareCopy']['closed'] and '已复制' in d['projShareCopy']['toast'],
-         d['projShareCopy'])
     need('智能体项目数跟着变',       '14 个项目' in d['projAgent']['body'], d['projAgent']['body'][:120])
 
     # ── 工作台问答交互（v30）：算力队列让位、与右下角智能体同会话 ──

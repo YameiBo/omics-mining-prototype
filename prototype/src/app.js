@@ -1219,6 +1219,7 @@ function renderDemoSet() {
   box.innerHTML = DEMO_DS.map(function (d) {
     return '<div class="card pubdsr' + (canSet ? '' : ' is-ro') + '" data-pdsrow="' + esc(d.id) + '">'
       + '<div class="card__bd row align-start gap-4">'
+      +   '<div class="pubdsr__pv">' + demoCoverPreview(d) + '</div>'
       +   '<div class="pubdsr__bd">'
       +     '<div class="pubdsr__hd">'
       +       '<input class="inp pubdsr__name" data-pds-name="' + esc(d.id) + '" value="' + esc(d.n) + '"'
@@ -1233,6 +1234,15 @@ function renderDemoSet() {
       +       '<textarea class="inp inp--ta" id="intro-' + esc(d.id) + '" rows="2"'
       +       ' data-pds-intro="' + esc(d.id) + '" placeholder="一句话说明这个数据集能用来做什么"' + dis + why + '>'
       +       esc(d.intro) + '</textarea></div>'
+      +     '<div class="fld"><label class="fld__l">封面（上传本地图片，可预览）</label>'
+      +       '<div class="row">'
+      +         '<button type="button" class="btn btn--sm" data-pds-up="' + esc(d.id) + '"' + dis + why + '>'
+      +           ico('upload') + '上传本地图片</button>'
+      +         '<button type="button" class="btn btn--sm btn--quiet" data-pds-clr="' + esc(d.id) + '"'
+      +           (d.img ? '' : ' aria-disabled="true"') + dis + why + '>' + ico('xmark') + '清除封面</button>'
+      +       '</div>'
+      +       '<input type="file" class="sr" accept="image/*" data-pds-file="' + esc(d.id) + '"' + dis + '>'
+      +     '</div>'
       +   '</div>'
       + '</div></div>';
   }).join('');
@@ -12087,6 +12097,9 @@ function init() {
       names: $$('#pubdsList [data-pds-name]').map(function (x) { return x.value; }),
       intros: $$('#pubdsList [data-pds-intro]').map(function (x) { return x.value; }),
       imgs: $$('#pubdsList [data-pds-img]').map(function (s) { return s.value; }),
+      hasSelect: $$('#pubdsList [data-pds-img]').length,
+      hasUp: $$('#pubdsList [data-pds-up]').length,
+      hasClr: $$('#pubdsList [data-pds-clr]').length,
       covers: $$('#pubdsList .pubdsr__im').length,
       noCover: $$('#pubdsList .pubdsr__no').length,
       count: t('#pubdsCount'), hidden: t('#pubdsHidden'), cur: t('#pubdsCur'), sum: t('#demoDsSum'),

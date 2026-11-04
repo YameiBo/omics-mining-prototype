@@ -2414,7 +2414,14 @@ DRIVE = r"""
       card: txt(q('#dsGroup-own [data-pick="转录组表达矩阵"] .dcard__h')),
       store: window.__pubds().intros[1]
     };
-    /* ③ 名称：改名 → 设置页输入框与数据源同步 */
+    /* ③ 封面：上传/预览保留、下拉已撤 */
+    window.__pubds({ id: 'gtex-liver', img: 'img:rnaseq' }); await sleep(240);
+    R.pubdsCover = {
+      init: R.pubdsInit.frontHumanImg,
+      now: qa('#pubGrid-human .dcard .dcard__im').length,
+      preview: qa('#pubdsList .pubdsr__im').length
+    };
+    /* ④ 名称：改名 → 设置页输入框与数据源同步 */
     window.__pubds({ id: 'own-rna', n: '【验证】改过的名称' }); await sleep(240);
     R.pubdsName = {
       store: window.__pubds().names[1],
@@ -5940,11 +5947,13 @@ try:
          d['sampRestore']['cur'] == 'S037', d['sampRestore'])
 
     # ---- v40 需求 2：系统管理 › 示例数据集（显示 / 简介 / 封面）----
-    _pi, _ph, _pn, _pc, _pa, _pr = (d['pubdsInit'], d['pubdsHide'], d['pubdsIntro'],
-                                    d['pubdsName'], d['pubdsAllOff'], d['pubdsReset'])
-    need('示例数据集设置页：9 条内置数据集逐条可设（名称 / 显示开关 / 简介）',
+    _pi, _ph, _pn, _pnm, _pc, _pa, _pr = (d['pubdsInit'], d['pubdsHide'], d['pubdsIntro'],
+                                          d['pubdsName'], d['pubdsCover'], d['pubdsAllOff'], d['pubdsReset'])
+    need('示例数据集设置页：9 条可设（名称 / 显示 / 简介），封面保留上传与预览、无下拉',
          _pi['n'] == 9 and _pi['rows'] == 9 and _pi['toggles'] == 9 and _pi['checked'] == 9
          and len(_pi['names']) == 9 and len(_pi['intros']) == 9
+         and _pi['hasSelect'] == 0 and _pi['hasUp'] == 9 and _pi['hasClr'] == 9
+         and _pi['covers'] == 3 and _pi['noCover'] == 6
          and _pi['count'] == '显示 9 / 9 条' and _pi['hidden'] == '全部显示中'
          and _pi['cur'] == '院内队列 3 · 人类公开 3 · 小鼠公开 3'
          and (_pi['frontOwn'], _pi['frontHuman'], _pi['frontMouse']) == (3, 3, 3)
@@ -5955,8 +5964,10 @@ try:
          and _ph['sum'] == '9 条 · 显示 8 条', _ph)
     need('简介设置真实作用于前台：改院内队列的简介，工作台卡片底部那行文字跟着换',
          _pn['store'] == '【验证】改过的简介' and _pn['card'] == '【验证】改过的简介', _pn)
+    need('封面仍可设置与预览（下拉已撤，上传/清除在）：配封面后前台与预览各多一张图',
+         _pc['now'] == _pc['init'] + 1 and _pc['preview'] == 4, _pc)
     need('名称可编辑：设置页输入框与数据模型同步',
-         _pc['store'] == '【验证】改过的名称' and _pc['input'] == '【验证】改过的名称', _pc)
+         _pnm['store'] == '【验证】改过的名称' and _pnm['input'] == '【验证】改过的名称', _pnm)
 
     # ---- v59：封面图「有 <img> 元素」≠「图能显示」----
     # v40 那条断言只数元素个数，而元素一直都在 —— 断不出图裂。

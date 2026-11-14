@@ -1846,6 +1846,7 @@
           </div>
           <button class="btn btn--sm" data-soon="项目列表刷新"><i class="fa-solid fa-rotate ico"></i>刷新</button>
           <button class="btn btn--sm btn--primary" data-proj-new><i class="fa-solid fa-plus ico"></i>新建项目</button>
+          <button class="btn btn--sm" data-go="reportlist"><i class="fa-solid fa-file-lines ico"></i>查看报告</button>
         </div>
       </div>
       <!-- class 由 renderProj() 按视图重设：卡片态 grid2 / 列表态 card。
@@ -1861,6 +1862,39 @@
          六个页签 = 项目的六个切面，内容由 renderProjPanel() 现算后写进 #projBody。
          页签条与面板都由 JS 按 PDTABS 现渲染 —— 两处各写一份必然分叉。
     ═══════════════════════════════════════════════════════════ -->
+    <!-- ═══════════ 项目空间 · 报告列表（v72） ═══════════
+         从项目管理页「查看报告」进入；列出全部可视化报告（预览 / 下载 / 删除）。 -->
+    <section class="page" data-proto-scope="page:reportlist" data-proto-layer="0" id="page-reportlist" aria-label="报告列表">
+      <div class="phead">
+        <div>
+          <div class="phead__eye">项目空间 · 报告列表</div>
+          <h1 class="phead__h1">报告列表</h1>
+          <p class="phead__d">全部项目生成的可视化报告。预览在弹窗内查看，下载得到 PDF 原件，删除会同时移除该报告记录。</p>
+        </div>
+        <div class="phead__side">
+          <button class="btn" data-go="proj"><i class="fa-solid fa-arrow-left ico"></i>返回项目管理</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__hd">
+          <span class="card__t">全部报告</span>
+          <span class="card__d" id="reportMeta">—</span>
+        </div>
+        <div class="card__bd pt-0">
+          <div class="tblwrap">
+            <table class="tbl" id="reportTbl">
+              <thead><tr>
+                <th>报告名称</th><th>创建人</th><th class="num">报告生成时间</th>
+                <th>所属项目</th><th class="wid">操作</th>
+              </tr></thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="page" data-proto-scope="page:projdetail" data-proto-layer="0" id="page-projdetail" aria-label="项目概况">
       <div class="phead">
         <div>

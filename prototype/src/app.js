@@ -3260,7 +3260,7 @@ var PAGES = {
   p01: '工作台', gene: '样本档案', files: '文件管理',
   p02: '数据汇集', p04: '流程模板',
   p05: '参数配置', p06: '任务运行', p07: '查看分析结果',
-  proj: '项目管理',
+  proj: '项目管理', reportlist: '报告列表',
   /* v40：dataset 从菜单里撤了。它不是第 14 项而是项目的一层：见 PDTABS 里的
      ['dataset', '数据集', 'database']。PAGES 里也不再留它 —— 留着就等于留一个
      谁也点不到、又没人负责同步的死页面。 */
@@ -3374,7 +3374,7 @@ function navGroupOf(name) {
    工作台 › 项目管理 › 项目概况。
    不写成「工作台 › 项目空间 › 项目概况」——分组的落点就是项目管理页，
    两个可点段指向同一个地方，用户点哪个都一样，等于摆一个假选项。 */
-var DRILL = { projdetail: { t: '项目管理', id: 'proj' } };
+var DRILL = { projdetail: { t: '项目管理', id: 'proj' }, reportlist: { t: '项目管理', id: 'proj' } };
 
 function crumbSegs(id) {
   var segs = [];
@@ -3513,6 +3513,7 @@ function goto(id, opts) {
   /* 项目组管理（v47）：进页面按当前数据重画一次 —— 别处（向导 / 审核）改过名单时，
      这一页不该停在上一次的快照上。 */
   if (id === 'projgroup') renderProjGroups();
+  if (id === 'reportlist') renderReports();
   var snav = $('#snav'); if (snav) snav.classList.remove('is-open');
   /* 正文现在有自己的滚动容器（.content），重置它而不是窗口 */
   var pane = $('#content'); if (pane) pane.scrollTop = 0; else window.scrollTo({ top: 0, behavior: 'auto' });
@@ -4252,6 +4253,17 @@ document.addEventListener('click', function (e) {
     return;
   }
   if (e.target.closest('[data-report-open]')) { openReport(); return; }
+  if ((t = e.target.closest('[data-report-prev]'))) { openReport(); return; }
+  if ((t = e.target.closest('[data-report-dl]'))) { downloadReport(t.getAttribute('data-report-dl')); return; }
+  if ((t = e.target.closest('[data-report-del]'))) { askDeleteReport(t.getAttribute('data-report-del')); return; }
+  if ((t = e.target.closest('[data-report-del-ok]'))) {
+    var did = t.getAttribute('data-report-del-ok');
+    REPORTS = REPORTS.filter(function (x) { return x.id !== did; });
+    $('#modal').hidden = true;
+    renderReports();
+    toast('报告已删除', 'ok');
+    return;
+  }
   if (e.target.closest('[data-lin-fold]')) { toggleLinFold(); return; }
   if (e.target.closest('[data-lin-axis]')) { toggleLinAxis(); return; }
   if (e.target.closest('[data-lin-clear]')) { linFocus(''); return; }
@@ -5651,6 +5663,63 @@ function renderHist() {
    （负责人、可见范围、更新时间排成列才好扫）。状态存在 PROJ_VIEW 而不是 DOM 上，
    这样从别的页面切回来、或切完项目重渲染，视图选择都还在。 */
 var PROJ_VIEW = 'card';
+
+/* ---------- v72：报告列表（全部可视化报告） ----------
+   演示数据与截图口径一致：报告名 / 创建人 / 生成时间 / 所属项目。 */
+var REPORTS = [
+  { id: 'R-1112', n: '我不信跑不通分析报告_1112', who: 'admin', t: '2026-11-12 16:16:48', pj: '我不信跑不通' },
+  { id: 'R-1111', n: '测试111分析报告_1111', who: 'admin', t: '2026-11-11 15:57:06', pj: '测试111' },
+  { id: 'R-1106', n: '666分析报告_1106', who: 'admin', t: '2026-11-06 14:44:47', pj: '666' },
+  { id: 'R-0928', n: '333分析报告_0928', who: 'admin', t: '2026-09-28 09:42:48', pj: '333' },
+  { id: 'R-0827a', n: '777分析报告_0827', who: 'admin', t: '2026-08-27 15:58:21', pj: '777' },
+  { id: 'R-0827b', n: '999分析报告_0827', who: 'admin', t: '2026-08-27 10:48:18', pj: '999' },
+  { id: 'R-0827c', n: '测试阿萨德发分析报告_0827', who: 'admin', t: '2026-08-27 09:30:20', pj: '测试阿萨德发' },
+  { id: 'R-0827d', n: '555分析报告_0827', who: 'admin', t: '2026-08-27 09:09:02', pj: '555' },
+  { id: 'R-0826a', n: '888分析报告_0826_分析进行中', who: 'admin', t: '2026-08-26 19:45:21', pj: '888' },
+  { id: 'R-0826b', n: 'ghhhh分析报告_0826_分析进行中', who: 'admin', t: '2026-08-26 19:31:01', pj: 'ghhhh' }
+];
+
+function reportById(id) { return REPORTS.filter(function (x) { return x.id === id; })[0] || null; }
+
+function renderReports() {
+  var tb = $('#reportBody'); if (!tb) return;
+  var meta = $('#reportMeta');
+  if (meta) meta.textContent = '共 ' + REPORTS.length + ' 份报告';
+  if (!REPORTS.length) {
+    tb.innerHTML = '<tr><td colspan="5" class="tempty">还没有生成过报告</td></tr>';
+    return;
+  }
+  tb.innerHTML = REPORTS.map(function (r) {
+    return '<tr>'
+      + '<td>' + esc(r.n) + '</td>'
+      + '<td>' + esc(r.who) + '</td>'
+      + '<td class="num nw">' + esc(r.t) + '</td>'
+      + '<td>' + esc(r.pj) + '</td>'
+      + '<td class="wid"><span class="ops">'
+      + '<button type="button" class="btn btn--sm btn--quiet" data-report-prev="' + esc(r.id) + '">' + ico('eye') + '预览</button>'
+      + '<button type="button" class="btn btn--sm btn--quiet" data-report-dl="' + esc(r.id) + '">' + ico('download') + '下载</button>'
+      + '<button type="button" class="btn btn--sm btn--quiet" style="color:var(--color-danger)" data-report-del="' + esc(r.id) + '">' + ico('trash-can') + '删除</button>'
+      + '</span></td></tr>';
+  }).join('');
+}
+
+function downloadReport(id) {
+  var r = reportById(id); if (!r) return;
+  var url = reportBlobUrl();
+  if (!url) { toast('报告文件缺失，暂无法下载', 'warn'); return; }
+  var a = document.createElement('a');
+  a.href = url; a.download = r.n + '.pdf';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('已开始下载「' + r.n + '」', 'ok');
+}
+
+function askDeleteReport(id) {
+  var r = reportById(id); if (!r) return;
+  showModal('删除报告',
+    '<p>确定删除「<strong>' + esc(r.n) + '</strong>」吗？删除后该报告记录不可恢复。</p>',
+    '<button type="button" class="btn" data-close="modal">取消</button>'
+    + '<button type="button" class="btn btn--primary" data-report-del-ok="' + esc(id) + '">确认删除</button>');
+}
 
 function renderProj() {
   var box = $('#projGrid');

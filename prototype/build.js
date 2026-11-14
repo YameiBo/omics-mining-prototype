@@ -319,7 +319,7 @@ if (!/svg\.ico\s*\{/.test(twCss)) problems.push('tw.css 缺少 svg.ico 尺寸规
    但仍然是一个真页面，漏登记它就会「页面被误删了没人发现」。
    v47：projgroup（项目组管理）加进来 —— 系统管理组的新页面。 */
 const pages = ['p01', 'gene', 'files', 'p02', 'p04', 'p05', 'p06', 'p07',
-  'kbmed', 'kbown', 'kbgraph', 'proj', 'projdetail', 'sample', 'pubds', 'projgroup', 'log'];
+  'kbmed', 'kbown', 'kbgraph', 'proj', 'projdetail', 'reportlist', 'sample', 'pubds', 'projgroup', 'log'];
 for (const p of pages) if (!off.includes('id="page-' + p + '"')) problems.push('缺少页面 ' + p);
 /* 旧 id 不得复活：p09 已被拆成 kbmed / kbown / kbgraph 三页 */
 if (off.includes('id="page-p09"')) problems.push('已删除的 page-p09 又回来了');

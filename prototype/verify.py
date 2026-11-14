@@ -331,7 +331,7 @@ DRIVE = r"""
     R.navVia = {};
     R.icoPerPage = {};   /* 逐页扫描：只测首屏可见页会漏掉「图表框内按钮图标被 .chartbox svg 撑满」这类问题 */
     for (const p of ['p01','gene','files','p02','p04','p05','p06','p07',
-                     'kbmed','kbown','kbgraph','proj','pubds','projgroup','log']) {
+                     'kbmed','kbown','kbgraph','proj','reportlist','pubds','projgroup','log']) {
       const b = goPage(p);
       if (b) { b.click(); R.navVia[p] = 'nav'; }
       else { window.__goRaw(p); R.navVia[p] = 'raw'; }
@@ -3480,6 +3480,34 @@ DRIVE = r"""
     /* 收尾：身份复位、排序复位、搜索与勾选清空 —— 后面的截图要的是默认长相 */
     window.__pg({ role: 'super', sort: 0, q: '', sel: [] }); await sleep(300);
 
+    /* ---- v72：报告列表（项目管理 › 查看报告）---- */
+    q('[data-go="proj"]').click(); await sleep(260);
+    R.reportEntry = { btn: !!q('#page-proj [data-go="reportlist"]') };
+    q('#page-proj [data-go="reportlist"]').click(); await sleep(340);
+    R.reportList = {
+      page: qa('.page.is-on')[0].id,
+      crumb: txt(q('#crumb')),
+      rows: qa('#reportBody tr').length,
+      head: qa('#reportTbl thead th').map(txt),
+      prev: qa('#reportBody [data-report-prev]').length,
+      dl: qa('#reportBody [data-report-dl]').length,
+      del: qa('#reportBody [data-report-del]').length,
+      meta: txt(q('#reportMeta'))
+    };
+    q('#reportBody [data-report-prev]').click(); await sleep(420);
+    R.reportPrev2 = {
+      open: !q('#modal').hidden, iframe: !!q('#modal .report-frame'),
+      src: (q('#modal .report-frame') || {}).src || ''
+    };
+    q('#modal [data-close="modal"]').click(); await sleep(180);
+    q('#reportBody [data-report-del]').click(); await sleep(300);
+    R.reportDelAsk = { open: !q('#modal').hidden, title: txt(q('#modalT')),
+                       ok: !!q('#modal [data-report-del-ok]') };
+    q('#modal [data-report-del-ok]').click(); await sleep(320);
+    R.reportDelDone = { rows: qa('#reportBody tr').length, meta: txt(q('#reportMeta')),
+                        toast: lastToast() };
+    window.__goHome(); await sleep(220);
+
     /* 智能体数字必须跟着新建走：写死「13 个项目」的话这里会露馅。
        v53：会话唯一宿主是主页问答卡，读 #wbAgentBody。 */
     goPage('p01').click(); await sleep(200);
@@ -5206,12 +5234,12 @@ try:
     # v51：智能分析补上第 5 步「查看分析结果」，页数 16→17。菜单项**不动**（还是 10）——
     # 它落在那个整组 off 的分组里，多一页不会让菜单长出东西来。
     # 这正是分类不变式的价值：页数与菜单项数各自独立变化，谁涨谁不涨都断得住。
-    need('17 页',
-         d['orch']['pageCount'] == 17, d['orch']['pageCount'])
+    need('18 页',
+         d['orch']['pageCount'] == 18, d['orch']['pageCount'])
     need('页面要么在菜单里、要么在菜单外这批 —— 没有第三种',
-         len(d['ia']['offMenu']) == 7
+         len(d['ia']['offMenu']) == 8
          and sorted(d['ia']['offMenu']) == ['p02', 'p04', 'p05', 'p06', 'p07',
-                                            'projdetail', 'sample'],
+                                            'projdetail', 'reportlist', 'sample'],
          d['ia']['offMenu'])
     # v39 需求 1：项目空间挪到智能分析**上方**。项目是数据的归属方 ——
     # 先有项目，才有被它约束的分析流程，菜单顺序要跟这条因果一致。
@@ -5228,8 +5256,8 @@ try:
     # `[data-go]` 按钮（数据汇集 / 流程模板这些页面里本来就到处是「下一步」），
     # 于是菜单外的页面照样是 'nav' —— 那不是漏网，是这条链路的第二条腿。
     # 「这几页不在菜单里」由上面 offMenu 那条守着，两条各管各的。
-    need('15 个页面均可达（含撤出菜单的 5 页）',
-         len(d['nav']) == 15 and all(d['nav'][p] is True for p in d['nav']),
+    need('16 个页面均可达（含撤出菜单的 6 页）',
+         len(d['nav']) == 16 and all(d['nav'][p] is True for p in d['nav']),
          {'nav': d['nav'], 'via': d['navVia']})
     need('工作台为顶级叶子项',        d['ia']['navTop'] == 1, d['ia']['navTop'])
     need('每个分组一个子项容器',       d['ia']['navLists'] == 4, d['ia']['navLists'])
@@ -7149,7 +7177,7 @@ try:
     # 「步骤条多了一格但页面没建」也能混过去 —— 那种情况下点第 5 格是死的。
     need('智能分析步骤条 4 步（v70 撤参数配置；v37/v42/v51 的其余调整仍在）',
          _steps == ['数据汇集', '流程模板', '任务运行', '查看分析结果']
-         and _al['pages'] == 17 and _al['navItems'] == 10, _al['stepNames'])
+         and _al['pages'] == 18 and _al['navItems'] == 10, _al['stepNames'])
 
     # ══════════ v51：第 5 步「查看分析结果」= 结果全景的第二个宿主 ══════════
     # 形状与 v50 需求 2 一致：**按一个动作的几处回声来断**，不逐条罗列读数。
@@ -7159,6 +7187,23 @@ try:
     #             所以同一时刻只允许一处装着它（#viewSeg 全局 1 个、另一个宿主为空）
     #   ④ 入口 —— 页脚「下一步」指向它；排队态点「查看结果」要被拦住
     # 为什么 ② 里要连「三张空表体」一起断：那三张表（富集/蛋白组/代谢组）的表体
+    # ---- v72：报告列表 ----
+    _re = d['reportEntry']; _rl = d['reportList']
+    need('项目管理页「查看报告」进入报告列表',
+         _re['btn'] and _rl['page'] == 'page-reportlist' and _rl['crumb'] == '报告列表', (_re, _rl['page']))
+    need('报告列表：10 行 · 5 列 · 每行预览/下载/删除齐备',
+         _rl['rows'] == 10 and _rl['head'] == ['报告名称', '创建人', '报告生成时间', '所属项目', '操作']
+         and _rl['prev'] == 10 and _rl['dl'] == 10 and _rl['del'] == 10
+         and '共 10 份报告' in _rl['meta'], _rl)
+    need('报告列表「预览」打开内嵌 PDF（blob）',
+         d['reportPrev2']['open'] and d['reportPrev2']['iframe']
+         and d['reportPrev2']['src'].startswith('blob:'), d['reportPrev2'])
+    need('报告删除需确认，确认后行数与计数同步',
+         d['reportDelAsk']['open'] and d['reportDelAsk']['title'] == '删除报告'
+         and d['reportDelAsk']['ok'] and d['reportDelDone']['rows'] == 9
+         and '共 9 份报告' in d['reportDelDone']['meta']
+         and '已删除' in (d['reportDelDone']['toast'] or ''), (d['reportDelAsk'], d['reportDelDone']))
+
     # 是空的，靠挂载后补做 fillTables() 现填 —— 漏了这一步，页面看上去完全正常，
     # 只有点那三条导出才会发现「读到的只有表头」。**一个跑不出来的动作要有人守着。**
     _rs = d['resStep']

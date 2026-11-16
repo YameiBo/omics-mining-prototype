@@ -3948,6 +3948,12 @@ DRIVE = r"""
        全段只看**增量**（提问 = +2 条），写死绝对值会随前面段落的变化集体变红。 */
     const wbMsgs0 = qa('#wbAgentBody .msg').length;
     q('#wbAgentQs [data-ask="查看流程"]').click(); await sleep(480);
+    R.wbKpi = {
+      labels: qa('#page-p01 .mrow .mcell__l').map(txt),
+      vals: qa('#page-p01 .mrow .mcell__v').map(txt),
+      feets: qa('#page-p01 .mrow .mcell__f').length
+    };
+    R.wbQuick = qa('#page-p01 [data-anchor="快捷入口"] .btn').map(txt);
     R.wbAgent = {
       p01Cards: wbCards,
       queueGone: wbCards.indexOf('算力队列') < 0,
@@ -6952,6 +6958,12 @@ try:
 
     # ── 工作台问答交互（v30）：算力队列让位、与右下角智能体同会话 ──
     wb = d['wbAgent']
+    _wk = d['wbKpi']
+    need('工作台指标四项：进行中任务 / 总共完成数量 / 失败数量 / 累计分析样本数量（无第三行小字）',
+         _wk['labels'] == ['进行中任务', '总共完成数量', '失败数量', '累计分析样本数量']
+         and _wk['feets'] == 0, _wk)
+    need('工作台快捷入口：数据汇集 / 流程模板 / 项目管理 / 新建项目',
+         d['wbQuick'] == ['数据汇集', '流程模板', '项目管理', '新建项目'], d['wbQuick'])
     need('工作台已无算力队列卡（p01 卡片清单）',
          wb['queueGone'] and '问答交互' in wb['p01Cards'], wb['p01Cards'])
     need('任务运行页的算力队列卡也已撤除', wb['p06QueueGone'] is True, wb['p06QueueGone'])

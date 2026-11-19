@@ -3951,7 +3951,8 @@ DRIVE = r"""
     R.wbKpi = {
       labels: qa('#page-p01 .mrow .mcell__l').map(txt),
       vals: qa('#page-p01 .mrow .mcell__v').map(txt),
-      feets: qa('#page-p01 .mrow .mcell__f').length
+      feets: qa('#page-p01 .mrow .mcell__f').length,
+      recent7: txt(q('#page-p01')).indexOf('最近 7 天') >= 0
     };
     R.wbQuick = qa('#page-p01 [data-anchor="快捷入口"] .btn').map(txt);
     R.wbAgent = {
@@ -6962,6 +6963,7 @@ try:
     need('工作台指标四项：进行中任务 / 总共完成数量 / 失败数量 / 累计分析样本数量（无第三行小字）',
          _wk['labels'] == ['进行中任务', '总共完成数量', '失败数量', '累计分析样本数量']
          and _wk['feets'] == 0, _wk)
+    need('最近任务不再显示「最近 7 天」小字', _wk['recent7'] is False, _wk['recent7'])
     need('工作台快捷入口：数据汇集 / 流程模板 / 项目管理 / 新建项目',
          d['wbQuick'] == ['数据汇集', '流程模板', '项目管理', '新建项目'], d['wbQuick'])
     need('工作台已无算力队列卡（p01 卡片清单）',
